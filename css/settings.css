@@ -1,0 +1,60 @@
+/* general */
+#LdapOrgSettings table > tbody > tr > td:first-child {
+	padding: 0 10px 0 5px;
+}
+/* end of general */
+
+
+/* content */
+#ldaporg-existing-users {
+	display: inline-block;
+	max-height: 300px;
+	overflow: auto;
+	border: 1px #aaa solid;
+}
+
+#ldaporg-existing-users > .user {
+	position: relative;
+	padding: 5px 30px 5px 5px;
+}
+
+#ldaporg-existing-users > .user:focus, #ldaporg-existing-users > .user:hover, #ldaporg-existing-users > .user:active {
+	background-color: #ddd;
+}
+
+#ldaporg-existing-users > .user > span.icon {
+	display: block;
+	position: absolute;
+	top: 7px;
+	right: 7px;
+	cursor: pointer;
+}
+
+#ldaporg-user-content {
+	display: inline-block;
+	vertical-align: top;
+	padding: 0 10px 0 20px;
+}
+/* end of content */
+
+/* messages */
+#LdapOrgSettings .msg {
+	border-radius: 3px;
+	background-color: #f3c800;
+	padding: 5px;
+	display: none;
+}
+
+#LdapOrgSettings .msg.success {
+	color: #fff;
+	background-color: #47a447;
+}
+#LdapOrgSettings .msg.error {
+	color: #fff;
+	background-color: #d2322d;
+}
+
+#LdapOrgSettings .msg-container {
+	height: 25px;
+}
+/* end of messages */

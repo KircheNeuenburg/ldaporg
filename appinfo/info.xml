@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<info>
+	<id>ldaporg</id>
+	<name>LDAP Organisation</name>
+	<description>Lets you easily create and edit your LDAP users and groups.</description>
+	<licence>AGPL</licence>
+    <author>Alexander Hornig</author>
+    <version>0.1</version>
+	<types>
+		<tool/>
+	</types>
+	<namespace>LdapOrg</namespace>
+	
+	<dependencies>
+        <user_ldap/>
+        <ldapcontacts/>
+        <nextcloud min-version="11" max-version="11"/>
+    </dependencies>
+	
+	<settings>
+		<admin>OCA\LdapOrg\Settings\Admin</admin>
+	</settings>
+</info>
