@@ -23,11 +23,7 @@ Class SettingsController extends Controller {
 	/** @var IConfig */
 	private $config;
 	// default values
-	private $default = [
-		'superuser_group_id' => 500,
-		'order_by' => 'firstname',
-		'user_gidnumber' => 501,
-	];
+	private $default;
 	
 	/**
 	 * @param string $AppName
@@ -41,6 +37,20 @@ Class SettingsController extends Controller {
 		$this->appName = $AppName;
 		$this->l = $l10n;
 		$this->config = $config;
+		// fill default values
+		$this->default = array(
+			'superuser_group_id' => 500,
+			'order_by' => 'firstname',
+			'user_gidnumber' => 501,
+			'pwd_reset_url_active' => true,
+			'pwd_reset_url' => 'https://account.kircheneuenburg.de/?action=sendtoken',
+			'pwd_reset_url_attr' => 'login',
+			'pwd_reset_url_attr_ldap_attr' => 'mail',
+			'welcome_mail_subject' => $this->l->t( 'Welcome to Nextcloud' ),
+			'welcome_mail_from_adress' => 'info@example.com',
+			'welcome_mail_from_name' => 'Nextcloud',
+			'welcome_mail_message' => $this->l->t( 'Welcome to Nextcloud! We hope you enjoy your time here.' ),
+		);
 	}
 	
 	/**

@@ -108,7 +108,7 @@ $(document).ready(function () {
 					contentType: 'application/json',
 					data: JSON.stringify( data )
 				}).done( function( data ) {
-					// if the creating was successful, reload all users
+					// if sending the reset password mail was successful, reload all users
 					if( data.status == 'success' ) {
 						self.loadUsers().done( function() {
 							// render the users again

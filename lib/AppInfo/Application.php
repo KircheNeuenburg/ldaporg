@@ -33,8 +33,6 @@ Class Application extends App {
 	private function registerServices() {
 		$container = $this->getContainer();
 		
-		// $container->registerAlias('PageController', Page::class);
-		
 		$container->registerService('SettingsController', function($c) {
 			$server = $c->getServer();
 			return new SettingsController(
@@ -65,7 +63,7 @@ Class Application extends App {
 	}
 	
 	/**
-	 * 
+	 * register the navigation button
 	 */
 	public function registerNavigation() {
 		$container = $this->getContainer();
