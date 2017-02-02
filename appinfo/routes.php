@@ -34,5 +34,7 @@ return [
 		[ 'name' => 'Page#removeGroup', 'url' => '/remove/group', 'verb' => 'POST' ],
 		[ 'name' => 'Page#deleteUser', 'url' => '/delete/user', 'verb' => 'POST' ],
 		[ 'name' => 'Page#createUser', 'url' => '/create/user', 'verb' => 'POST' ],
+		[ 'name' => 'Settings#getSettings', 'url' => '/settings', 'verb' => 'GET' ],
+		[ 'name' => 'Settings#updateSettings', 'url' => '/settings', 'verb' => 'POST' ],
 	]
 ];

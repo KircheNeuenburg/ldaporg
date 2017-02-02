@@ -13,6 +13,7 @@ namespace OCA\LdapOrg\Controller;
 
 use OCP\IRequest;
 use OCP\IConfig;
+use OCP\Mail\IMailer;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Controller;
@@ -22,6 +23,8 @@ use OCA\LdapContacts\Controller\ContactController;
 Class PageController extends ContactController {
 	// settings controller
 	protected $settings;
+	// mail handler
+	protected $mailer;
 
 	/**
 	 * @param string $AppName
@@ -29,12 +32,14 @@ Class PageController extends ContactController {
 	 * @param IConfig
 	 * @param SettingsController	
 	 */
-	public function __construct( $AppName, IRequest $request, IConfig $config, SettingsController $settings ) {
+	public function __construct( $AppName, IRequest $request, IConfig $config, SettingsController $settings, IMailer $mailer ) {
 		parent::__construct( $AppName, $request, $config );
 		// save the settings controller
 		$this->settings = $settings;
 		// load additional configuration
 		$this->load_config();
+		// save the mail handler
+		$this->mailer = $mailer;
 	}
 
 	/**
@@ -651,7 +656,11 @@ Class PageController extends ContactController {
 				}
 			
 			/* uid */
-				$user['uid'] = $uid_orig = substr( strtolower( $firstname ), 0, 2 ) . strtolower( $lastname );
+				$firstname_uid = preg_replace( "/[^a-zA-Z]+/", "", $firstname );
+				$lastname_uid = preg_replace( "/[^a-zA-Z]+/", "", $lastname );
+				$user['uid'] = $uid_orig = substr( strtolower( $firstname_uid ), 0, 2 ) . strtolower( $lastname_uid );
+				// the uid can't be empty
+				if( empty( $user['uid'] ) ) $user['uid'] = $uid_orig = 'dummy_uid';
 				$i = 1;
 				// add numbers at the end of the uid as long as there is another user with the same uid
 				$request = ldap_search( $this->connection, $this->base_dn, '(&' . $this->user_filter . '(uid=' . $user['uid'] . '))', array( 'uid' ) );
@@ -693,14 +702,39 @@ Class PageController extends ContactController {
 				mt_srand( microtime() * 999999 );
 				$salt = pack( 'CCCC', mt_rand(), mt_rand(), mt_rand() );
 				$user['userpassword'] = '{SSHA}' . base64_encode( pack( 'H*', sha1( strtolower( $firstname ) . $salt ) ) . $salt );
-			
+		
 		// create the user
 		$request = ldap_add( $this->connection, 'cn=' . $user['cn'] . ',ou=people,' . $this->base_dn, $user );
+		
+		// if user was created successfully, send him a welcome mail
+		if( $request ) {
+			$mailer = \OC::$server->getMailer();
+			$message = $mailer->createMessage();
+			$message->setSubject( $this->settings->getSetting( 'welcome_mail_subject' ) );
+			$message->setFrom( array( $this->settings->getSetting( 'welcome_mail_from_adress' ) => $this->settings->getSetting( 'welcome_mail_from_name' ) ) );
+			$message->setTo( array( $user['mail'] => $user['firstname'] . ' ' . $user['lastname'] ) );
+			$message->setBody( $this->settings->getSetting( 'welcome_mail_message' ) );
+			$mailer->send( $message );
+		}
+		
+		// check if password reset is active
+		if( $request && $this->settings->getSetting( 'pwd_reset_url_active' ) ) {
+			// get the request url
+			$curl = curl_init( $this->settings->getSetting( 'pwd_reset_url' ) );
+			// set to POST request if needed
+			if( !empty( $post_attr = $this->settings->getSetting( 'pwd_reset_url_attr' ) ) && !empty( $post_attr_ldap_attr = $this->settings->getSetting( 'pwd_reset_url_attr_ldap_attr' ) ) ) {
+				$post_fields = $post_attr . '=' . $user[ $post_attr_ldap_attr ];
+				curl_setopt( $curl, CURLOPT_POST, 1 );
+				curl_setopt( $curl, CURLOPT_POSTFIELDS, $post_fields );
+			}
+			// we don't want any output
+			curl_setopt( $curl, CURLOPT_RETURNTRANSFER, true );
+			// send the request
+			curl_exec( $curl );
+		}
 		
 		// check if the request was a success or not
 		if( $request ) return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'User successfully created' ) ), 'status' => 'success' ) );
 		else return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'Creating user failed' ) ), 'status' => 'error' ) );
-		
-		// TODO(hornigal): send password email
 	}
 }

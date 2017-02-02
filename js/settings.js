@@ -5,6 +5,7 @@ $(document).ready(function () {
 	
 	var Users = function() {
 		this._baseUrl = OC.generateUrl( '/apps/ldaporg' );
+		this._ldapcontacts_baseUrl = OC.generateUrl( '/apps/ldapcontacts' );
 		this._users = [];
 	};
 	
@@ -108,7 +109,7 @@ $(document).ready(function () {
 					contentType: 'application/json',
 					data: JSON.stringify( data )
 				}).done( function( data ) {
-					// if the creating was successful, reload all users
+					// if sending the reset password mail was successful, reload all users
 					if( data.status == 'success' ) {
 						self.loadUsers().done( function() {
 							// render the users again
@@ -125,7 +126,77 @@ $(document).ready(function () {
 					}
 				});
 			});
-		}
+		},
+		renderSettings: function() {
+			var deferred = $.Deferred();
+			var self = this;
+			$.get( this._baseUrl + '/settings' ).done( function( settings ) {
+				var deferred = $.Deferred();
+				// get all existing ldap groups
+				$.get( self._ldapcontacts_baseUrl + '/contacts/groups' ).done( function( groups ) {
+					// perform special actions on every group
+					$.each( groups, function( key, group ) {
+						// check if this is the currently selected admin group
+						if( settings.superuser_group_id == group.id ) groups[ key ].isadmin = true;
+						// check if this is the currently selected default group
+						if( settings.user_gidnumber == group.id ) groups[ key ].isdefault = true;
+					});
+					settings.groups = groups;
+					// render the settings area
+					var source = $( '#ldaporg-edit-settings-tpl' ).html();
+					var template = Handlebars.compile( source );
+					var html = template({ settings: settings });
+					$( '#ldaporg-edit-settings' ).html( html );
+					
+					// hide password reset url options deactivated
+					$( '#ldaporg_pwd_reset_url_active_false' ).change( function() {
+						$( '#ldaporg-edit-settings .pwd_reset_url' ).hide(400);
+					});
+					// show password reset url options when activated
+					$( '#ldaporg_pwd_reset_url_active_true' ).change( function() {
+						$( '#ldaporg-edit-settings .pwd_reset_url' ).show(400);
+					});
+					
+					// check if the passsword reset url options should be shown from the beginning or not
+					if( settings.pwd_reset_url_active ) $( '#ldaporg-edit-settings .pwd_reset_url' ).show();
+					else $( '#ldaporg-edit-settings .pwd_reset_url' ).hide();
+					
+					// save the settings
+					$( '#ldaporg_settings_save' ).click( function() {
+						self.saveSettings();
+					});
+					
+					deferred.resolve();
+				});
+				return deferred.promise();
+			});
+			return deferred.promise();
+		},
+		saveSettings: function() {
+			var self = this;
+			var deferred = $.Deferred();
+			// get all values from the form
+			var data = Object();
+			data.settings = $( '#ldaporg_settings_form' ).serializeArray();
+			// start saving
+			OC.msg.startSaving( '#ldaporg_settings_form .msg' );
+			
+			// update the settings
+			$.ajax({
+				url: self._baseUrl + '/settings',
+				method: 'POST',
+				contentType: 'application/json',
+				data: JSON.stringify( data )
+			}).done( function( data ) {
+				console.log( data );
+				// reload all settings
+				self.renderSettings().done( function() {
+					// saving the settings was successful
+					OC.msg.finishedSaving( '#ldaporg_settings_form .msg', data );
+				});
+			});
+			deferred.promise();
+		},
 	};
 	
 	var users = new Users;
@@ -133,6 +204,7 @@ $(document).ready(function () {
 		users.renderContent();
 		users.renderUsers( users._users );
 	});
+	users.renderSettings();
 });
 
 })(OC, window, jQuery);

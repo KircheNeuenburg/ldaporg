@@ -407,8 +407,20 @@ Groups.prototype = {
 				if( typeof( value ) != 'string' && typeof( value ) != 'number' ) return;
 				value = String( value ).toLowerCase();
 				if( ~value.indexOf( search ) ) {
-					matches.push( contact );
-					return false;
+					var in_group = false;
+					// check if the user is already a member of this group
+					$.each( self._activeGroup.members, function( i, member ) {
+						// if the user is already a member of the group, we are done searching
+						if( contact.id == member.id ) {
+							in_group = true;
+							return;
+						}
+					});
+					// check if the user was identified as a member of the group
+					if( !in_group && $.inArray( contact, matches ) == -1 ) {
+						matches.push( contact );
+					}
+					return;
 				}
 			});
 		});
