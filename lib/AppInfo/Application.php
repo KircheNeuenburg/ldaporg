@@ -33,33 +33,9 @@ Class Application extends App {
 	private function registerServices() {
 		$container = $this->getContainer();
 		
-		$container->registerService('SettingsController', function($c) {
-			$server = $c->getServer();
-			return new SettingsController(
-				$c->query('AppName'),
-				$c->query('Request'),
-				$c->query('L10N'),
-				$c->query('Config')
-			);
-		});
-		
-		$container->registerService('PageController', function($c) {
-            return new PageController(
-                $c->query('AppName'),
-                $c->query('Request'),
-                $c->query('Config'),
-				$c->query('SettingsController')
-            );
-        });
-		
-		$container->registerService('Admin', function($c) {
-            return new Admin(
-                $c->query('AppName'),
-                $c->query('Request'),
-                $c->query('Config'),
-				$c->query('SettingsController')
-            );
-        });
+		$container->registerAlias( 'SettingsController', SettingsController::class);
+		$container->registerAlias( 'PageController', PageController::class);
+		$container->registerAlias( 'Admin', Admin::class);
 	}
 	
 	/**

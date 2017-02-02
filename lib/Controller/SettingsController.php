@@ -14,6 +14,7 @@ namespace OCA\LdapOrg\Controller;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IConfig;
+use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Controller;
 
 Class SettingsController extends Controller {
@@ -40,10 +41,9 @@ Class SettingsController extends Controller {
 		// fill default values
 		$this->default = array(
 			'superuser_group_id' => 500,
-			'order_by' => 'firstname',
 			'user_gidnumber' => 501,
-			'pwd_reset_url_active' => true,
-			'pwd_reset_url' => 'https://account.kircheneuenburg.de/?action=sendtoken',
+			'pwd_reset_url_active' => false,
+			'pwd_reset_url' => '',
 			'pwd_reset_url_attr' => 'login',
 			'pwd_reset_url_attr_ldap_attr' => 'mail',
 			'welcome_mail_subject' => $this->l->t( 'Welcome to Nextcloud' ),
@@ -58,6 +58,52 @@ Class SettingsController extends Controller {
 	 */
 	public function getSetting( $key ) {
 		return $this->config->getAppValue( $this->appName, $key, $this->default[ $key ] );
+	}
+	
+	/**
+	 * returns all settings from this app
+	 * @NoCSRFRequired
+	 */
+	public function getSettings() {
+		// output buffer
+		$data = array();
+		// go through every existing setting
+		foreach( $this->default as $key => $v ) {
+			// get the settings value
+			$data[ $key ] = $this->getSetting( $key );
+		}
+		// return the buffered data
+		return new DataResponse( $data );
+	}
+	
+	/*
+	 * updates the given setting
+	 * 
+	 * @param string $key
+	 * @param mixed $value
+	 */
+	public function updateSetting( $key, $value ) {
+		// check if the setting is an actual setting this app has
+		if( !array_key_exists( $key, $this->default ) ) return false;
+		// save the setting
+		return $this->config->setAppValue( $this->appName, $key, $value );
+	}
+	
+	/**
+	 * returns all settings from this app
+	 * 
+	 * @param array $settings
+	 * @NoCSRFRequired
+	 */
+	public function updateSettings( $settings ) {
+		$success = true;
+		// go through every setting and update it
+		 foreach( $settings as $array ) {
+			 $success &= $this->updateSetting( $array['name'], $array['value'] );
+		 }
+		 // return message
+		 if( $success ) return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'Settings saved' ) ), 'status' => 'success' ) );
+		 else return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'Saving settings failed' ) ), 'status' => 'error	' ) );
 	}
 	
 	/**
