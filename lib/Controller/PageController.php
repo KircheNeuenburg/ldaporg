@@ -13,6 +13,7 @@ namespace OCA\LdapOrg\Controller;
 
 use OCP\IRequest;
 use OCP\IConfig;
+use OCP\Il10n;
 use OCP\Mail\IMailer;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\DataResponse;
@@ -32,8 +33,10 @@ Class PageController extends ContactController {
 	 * @param IConfig
 	 * @param SettingsController	
 	 */
-	public function __construct( $AppName, IRequest $request, IConfig $config, SettingsController $settings, IMailer $mailer ) {
+	public function __construct( $AppName, IRequest $request, IConfig $config, SettingsController $settings, IMailer $mailer, Il10n $l10n ) {
 		parent::__construct( $AppName, $request, $config );
+		// translation
+		$this->l2 = $l10n;
 		// save the settings controller
 		$this->settings = $settings;
 		// load additional configuration
@@ -52,6 +55,12 @@ Class PageController extends ContactController {
 		$ldapWrapper = new \OCA\User_LDAP\LDAP();
 		$connection = new \OCA\User_LDAP\Connection( $ldapWrapper );
 		$config = $connection->getConfiguration();
+		// check if this is the correct server of if we have to use a prefix
+		if( empty( $config['ldap_host'] ) ) {
+			$connection = new \OCA\User_LDAP\Connection( $ldapWrapper, 's01' );
+			$config = $connection->getConfiguration();
+		}
+		
 		// put the needed configuration in the local variables
 		$this->user_filter =  $config['ldap_userlist_filter'];
 		$this->group_filter = $config['ldap_group_filter'];
@@ -177,14 +186,14 @@ Class PageController extends ContactController {
 	 */
 	public function addAdminUser( $user, $group ) {
 		// check if the user is allowed to edit this group
-		if( !$this->userCanEdit( $group['id'] ) )return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'Permission denied' ) ), 'status' => 'error' ) );
+		if( !$this->userCanEdit( $group['id'] ) )return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Permission denied' ) ), 'status' => 'error' ) );
 		
 		// let the helper function handle the actual work
 		$return = $this->addAdminUserHelper( $user['mail'], $group['id'] );
 		
 		// check if the request was a success or not
-		if( $return ) return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'User is now an admin' ) ), 'status' => 'success' ) );
-		else return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'Making user admin failed' ) ), 'status' => 'error' ) );
+		if( $return ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'User is now an admin' ) ), 'status' => 'success' ) );
+		else return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Making user admin failed' ) ), 'status' => 'error' ) );
 	}
 	
 	/**
@@ -238,14 +247,14 @@ Class PageController extends ContactController {
 	 */
 	public function removeAdminUser( $user, $group ) {
 		// check if the user is allowed to edit this group
-		if( !$this->userCanEdit( $group['id'] ) )return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'Permission denied' ) ), 'status' => 'error' ) );
+		if( !$this->userCanEdit( $group['id'] ) )return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Permission denied' ) ), 'status' => 'error' ) );
 		
 		// let the helper function handle the actual work
 		$return = $this->removeAdminUserHelper( $user['mail'], $group['id'] );
 		
 		// check if the request was a success or not
-		if( $return ) return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'User is not an admin anymore' ) ), 'status' => 'success' ) );
-		else return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'Removing admin privileges failed' ) ), 'status' => 'error' ) );
+		if( $return ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'User is not an admin anymore' ) ), 'status' => 'success' ) );
+		else return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Removing admin privileges failed' ) ), 'status' => 'error' ) );
 	}
 	
 	/**
@@ -373,14 +382,14 @@ Class PageController extends ContactController {
 	 */
 	public function addUser( $user, $group ) {
 		// check if the user is allowed to edit this group
-		if( !$this->userCanEdit( $group['id'] ) )return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'Permission denied' ) ), 'status' => 'error' ) );
+		if( !$this->userCanEdit( $group['id'] ) )return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Permission denied' ) ), 'status' => 'error' ) );
 		
 		// let the helper function handle the actual work
 		$return = $this->addUserHelper( $user['mail'], $group['id'] );
 		
 		// check if the request was a success or not
-		if( $return ) return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'User successfully added' ) ), 'status' => 'success' ) );
-		else return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'Adding the user failed' ) ), 'status' => 'error' ) );
+		if( $return ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'User successfully added' ) ), 'status' => 'success' ) );
+		else return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Adding the user failed' ) ), 'status' => 'error' ) );
 	}
 	
 	/**
@@ -429,7 +438,7 @@ Class PageController extends ContactController {
 	 */
 	public function removeUser( $user, $group ) {
 		// check if the user is allowed to edit this group or wants to remove himself
-		if( $user['mail'] != $this->mail && !$this->userCanEdit( $group['id'] ) )return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'Permission denied' ) ), 'status' => 'error' ) );
+		if( $user['mail'] != $this->mail && !$this->userCanEdit( $group['id'] ) )return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Permission denied' ) ), 'status' => 'error' ) );
 		
 		// let the helper function handle the actual work
 		$return = $this->removeUserHelper( $user['mail'], $group['id'] );
@@ -437,13 +446,13 @@ Class PageController extends ContactController {
 		// check which type of message should be shown
 		if( $user['mail'] == $this->mail ) {
 			// check if the request was a success or not
-			if( $return ) return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'You are not a member of the group anymore' ) ), 'status' => 'success' ) );
-			else return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'Leaving the group failed' ) ), 'status' => 'error' ) );
+			if( $return ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'You are not a member of the group anymore' ) ), 'status' => 'success' ) );
+			else return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Leaving the group failed' ) ), 'status' => 'error' ) );
 		}
 		else {
 			// check if the request was a success or not
-			if( $return ) return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'User successfully removed' ) ), 'status' => 'success' ) );
-			else return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'Removing the user failed' ) ), 'status' => 'error' ) );
+			if( $return ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'User successfully removed' ) ), 'status' => 'success' ) );
+			else return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Removing the user failed' ) ), 'status' => 'error' ) );
 		}
 	}
 	
@@ -504,16 +513,16 @@ Class PageController extends ContactController {
 	 */
 	public function addGroup( $group_name ) {
 		// check if the user is allowed to add group
-		if( !$this->userCanEdit( $this->settings->getSetting( 'superuser_group_id' ) ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'Permission denied' ) ), 'status' => 'error' ) );
+		if( !$this->userCanEdit( $this->settings->getSetting( 'superuser_group_id' ) ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Permission denied' ) ), 'status' => 'error' ) );
 		// remove spaces from group_name
 		$group_name = trim( $group_name );
 		// the group_name can't be empty
-		if( empty( $group_name ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l->t( "Group name can't be empty" ) ), 'status' => 'error' ) );
+		if( empty( $group_name ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( "Group name can't be empty" ) ), 'status' => 'error' ) );
 		
 		// check if there is already a group with the same name
 		$request = ldap_search( $this->connection, $this->group_dn, '(&' . $this->ldap_group_filter . '(cn=' . $group_name . '))' );
 		$result = ldap_get_entries( $this->connection, $request );
-		if( $result['count'] != 0 ) return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'A group with the same name already exists' ) ), 'status' => 'error' ) );
+		if( $result['count'] != 0 ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'A group with the same name already exists' ) ), 'status' => 'error' ) );
 		
 		// get the highest current gidNumber
 		$request = ldap_search( $this->connection, $this->group_dn, '(&' . $this->ldap_group_filter . '(gidnumber=*))', array( 'gidnumber' ) );
@@ -538,8 +547,8 @@ Class PageController extends ContactController {
 		$request = ldap_add( $this->connection, 'cn=' . $group['cn'] . ',' . $this->group_dn, $group );
 		
 		// check if the request was a success or not
-		if( $request ) return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'Group successfully created' ) ), 'status' => 'success', 'gid' => $gidnumber ) );
-		else return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'Creating the group failed' ) ), 'status' => 'error' ) );
+		if( $request ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Group successfully created' ) ), 'status' => 'success', 'gid' => $gidnumber ) );
+		else return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Creating the group failed' ) ), 'status' => 'error' ) );
 	}
 	
 	/**
@@ -550,24 +559,24 @@ Class PageController extends ContactController {
 	 */
 	public function removeGroup( $group ) {
 		// check if the user is allowed to add group
-		if( !$this->userCanEdit( $this->settings->getSetting( 'superuser_group_id' ) ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'Permission denied' ) ), 'status' => 'error' ) );
+		if( !$this->userCanEdit( $this->settings->getSetting( 'superuser_group_id' ) ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Permission denied' ) ), 'status' => 'error' ) );
 		
 		// the superuser group can't be deleted
-		if( $group['id'] == $this->settings->getSetting( 'superuser_group_id' ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l->t( "The superuser group can't be deleted" ) ), 'status' => 'error' ) );
+		if( $group['id'] == $this->settings->getSetting( 'superuser_group_id' ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( "The superuser group can't be deleted" ) ), 'status' => 'error' ) );
 		
 		// get the groups dn
 		$request = ldap_search( $this->connection, $this->group_dn, str_replace( '%gid', $group['id'], $this->group_filter_specific ), array( 'dn' ) );
 		$result = ldap_get_entries( $this->connection, $request );
 		
 		// check if the group was found
-		if( $result['count'] != 1 || !isset( $result[0]['dn'] ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'Removing the group failed' ) ), 'status' => 'error' ) );
+		if( $result['count'] != 1 || !isset( $result[0]['dn'] ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Removing the group failed' ) ), 'status' => 'error' ) );
 		
 		// remove the group from the server
 		$request = ldap_delete( $this->connection, $result[0]['dn'] );
 		
 		// check if the request was a success or not
-		if( $request ) return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'Group successfully removed' ) ), 'status' => 'success' ) );
-		else return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'Removing the group failed' ) ), 'status' => 'error' ) );
+		if( $request ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Group successfully removed' ) ), 'status' => 'success' ) );
+		else return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Removing the group failed' ) ), 'status' => 'error' ) );
 	}
 	
 	/**
@@ -579,8 +588,8 @@ Class PageController extends ContactController {
 		// let the helper function do the actual work
 		$request = $this->deleteUserHelper( $user['mail'] );
 		// check if the request was a success or not
-		if( $request ) return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'User successfully deleted' ) ), 'status' => 'success' ) );
-		else return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'Deleting the user failed' ) ), 'status' => 'error' ) );
+		if( $request ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'User successfully deleted' ) ), 'status' => 'success' ) );
+		else return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Deleting the user failed' ) ), 'status' => 'error' ) );
 	}
 	
 	/**
@@ -619,15 +628,15 @@ Class PageController extends ContactController {
 		$lastname = trim( $lastname );
 		$mail = trim( $mail );
 		// none of the values can be empty
-		if( empty( $firstname ) || empty( $lastname ) || empty( $mail ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'No value can be empty' ) ), 'status' => 'error' ) );
+		if( empty( $firstname ) || empty( $lastname ) || empty( $mail ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'No value can be empty' ) ), 'status' => 'error' ) );
 		// values can't be longer that 100 characters
-		if( strlen( $firstname ) > 100 || strlen( $lastname ) > 100 || strlen( $mail ) > 100 ) return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'No value can be longer than 100 characters' ) ), 'status' => 'error' ) );
+		if( strlen( $firstname ) > 100 || strlen( $lastname ) > 100 || strlen( $mail ) > 100 ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'No value can be longer than 100 characters' ) ), 'status' => 'error' ) );
 		
 		// check if there is already an account with the same email
 		$request = ldap_search( $this->connection, $this->base_dn, '(&' . $this->user_filter . '(mail=' . $mail . '))', array( 'mail' ) );
 		$result = ldap_get_entries( $this->connection, $request );
 		// there can't be two users with the same email adress
-		if( $result['count'] != 0 ) return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'Another user with the same email adress already exists' ) ), 'status' => 'error' ) );
+		if( $result['count'] != 0 ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Another user with the same email adress already exists' ) ), 'status' => 'error' ) );
 		
 		/** generate all the users data **/
 			$user = array();
@@ -702,9 +711,9 @@ Class PageController extends ContactController {
 				mt_srand( microtime() * 999999 );
 				$salt = pack( 'CCCC', mt_rand(), mt_rand(), mt_rand() );
 				$user['userpassword'] = '{SSHA}' . base64_encode( pack( 'H*', sha1( strtolower( $firstname ) . $salt ) ) . $salt );
-		
+				
 		// create the user
-		$request = ldap_add( $this->connection, 'cn=' . $user['cn'] . ',ou=people,' . $this->base_dn, $user );
+		$request = ldap_add( $this->connection, 'cn=' . $user['cn'] . ',' . $this->base_dn, $user );
 		
 		// if user was created successfully, send him a welcome mail
 		if( $request ) {
@@ -713,7 +722,7 @@ Class PageController extends ContactController {
 			$message->setSubject( $this->settings->getSetting( 'welcome_mail_subject' ) );
 			$message->setFrom( array( $this->settings->getSetting( 'welcome_mail_from_adress' ) => $this->settings->getSetting( 'welcome_mail_from_name' ) ) );
 			$message->setTo( array( $user['mail'] => $user['firstname'] . ' ' . $user['lastname'] ) );
-			$message->setBody( $this->settings->getSetting( 'welcome_mail_message' ) );
+			$message->setHtmlBody( $this->settings->getSetting( 'welcome_mail_message' ) );
 			$mailer->send( $message );
 		}
 		
@@ -734,7 +743,7 @@ Class PageController extends ContactController {
 		}
 		
 		// check if the request was a success or not
-		if( $request ) return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'User successfully created' ) ), 'status' => 'success' ) );
-		else return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'Creating user failed' ) ), 'status' => 'error' ) );
+		if( $request ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'User successfully created' ) ), 'status' => 'success' ) );
+		else return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Creating user failed' ) ), 'status' => 'error' ) );
 	}
 }
