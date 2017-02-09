@@ -101,6 +101,8 @@ $(document).ready(function () {
 				data.firstname = $( '#ldaporg-create-user-firstname' ).val();
 				data.lastname = $( '#ldaporg-create-user-lastname' ).val();
 				data.mail = $( '#ldaporg-create-user-mail' ).val();
+				// start saving
+				OC.msg.startSaving( '#ldaporg-user-content .msg' );
 				
 				// create a user
 				$.ajax({
@@ -131,7 +133,6 @@ $(document).ready(function () {
 			var deferred = $.Deferred();
 			var self = this;
 			$.get( this._baseUrl + '/settings' ).done( function( settings ) {
-				var deferred = $.Deferred();
 				// get all existing ldap groups
 				$.get( self._ldapcontacts_baseUrl + '/contacts/groups' ).done( function( groups ) {
 					// perform special actions on every group
@@ -162,13 +163,13 @@ $(document).ready(function () {
 					else $( '#ldaporg-edit-settings .pwd_reset_url' ).hide();
 					
 					// save the settings
-					$( '#ldaporg_settings_save' ).click( function() {
+					$( '#ldaporg_settings_save' ).click( function(e) {
+						e.preventDefault();
 						self.saveSettings();
 					});
 					
 					deferred.resolve();
 				});
-				return deferred.promise();
 			});
 			return deferred.promise();
 		},

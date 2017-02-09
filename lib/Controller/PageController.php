@@ -702,9 +702,9 @@ Class PageController extends ContactController {
 				mt_srand( microtime() * 999999 );
 				$salt = pack( 'CCCC', mt_rand(), mt_rand(), mt_rand() );
 				$user['userpassword'] = '{SSHA}' . base64_encode( pack( 'H*', sha1( strtolower( $firstname ) . $salt ) ) . $salt );
-		
+				
 		// create the user
-		$request = ldap_add( $this->connection, 'cn=' . $user['cn'] . ',ou=people,' . $this->base_dn, $user );
+		$request = ldap_add( $this->connection, 'cn=' . $user['cn'] . ',' . $this->base_dn, $user );
 		
 		// if user was created successfully, send him a welcome mail
 		if( $request ) {
@@ -713,7 +713,7 @@ Class PageController extends ContactController {
 			$message->setSubject( $this->settings->getSetting( 'welcome_mail_subject' ) );
 			$message->setFrom( array( $this->settings->getSetting( 'welcome_mail_from_adress' ) => $this->settings->getSetting( 'welcome_mail_from_name' ) ) );
 			$message->setTo( array( $user['mail'] => $user['firstname'] . ' ' . $user['lastname'] ) );
-			$message->setBody( $this->settings->getSetting( 'welcome_mail_message' ) );
+			$message->setHtmlBody( $this->settings->getSetting( 'welcome_mail_message' ) );
 			$mailer->send( $message );
 		}
 		
