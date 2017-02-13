@@ -165,6 +165,7 @@ Groups.prototype = {
 						// if the creating was successful, reload all groups
 						if( data.status == 'success' ) {
 							self.loadAll().done( function() {
+								self.render();
 								// load the newly created group into the content area
 								self.load( data.gid ).done( function() {
 									// show group created message
