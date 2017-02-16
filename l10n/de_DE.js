@@ -68,6 +68,12 @@ OC.L10N.register(
 	"eMail Adress" : "E-Mail Adresse",
 	"Create" : "Erstellen",
 	"Abort" : "Abbrechen",
-	"Do you really want to delete the user {{ user.name }}?" : "Wollen Sie den Benutzer \"{{ user.name }}\" wirklich löschen?"
+	"Do you really want to delete the user {{ user.name }}?" : "Wollen Sie den Benutzer \"{{ user.name }}\" wirklich löschen?",
+	"For creating a group click here" : "Klicke hier, um eine Gruppe zu erstellen",
+	"Be careful! This button will delete a group" : "Achtung! Hiermit löschst du eine Gruppe",
+	"Search for a user here to add him to this group" : "Suche nach einem Benutzer, um ihn zu der Gruppe hinzuzufügen",
+	"Here you can leave this group" : "Hier kannst du die Gruppe verlassen",
+	"All members of this group are listed here" : "Alle Mitglieder dieser Gruppe findest du hier",
+	"Got it" : "Alles klar"
 },
 "nplurals=2; plural=(n != 1);");

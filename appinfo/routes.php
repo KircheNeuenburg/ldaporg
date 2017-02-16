@@ -36,5 +36,7 @@ return [
 		[ 'name' => 'Page#createUser', 'url' => '/create/user', 'verb' => 'POST' ],
 		[ 'name' => 'Settings#getSettings', 'url' => '/settings', 'verb' => 'GET' ],
 		[ 'name' => 'Settings#updateSettings', 'url' => '/settings', 'verb' => 'POST' ],
+		[ 'name' => 'Settings#getUserValue', 'url' => '/settings/personal/{key}', 'verb' => 'GET' ],
+		[ 'name' => 'Settings#setUserValue', 'url' => '/settings/personal', 'verb' => 'POST' ],
 	]
 ];
