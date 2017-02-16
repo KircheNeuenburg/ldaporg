@@ -13,6 +13,7 @@
 
 script( 'ldaporg', 'main' );
 style( 'ldaporg', 'main' );
+style( 'ldaporg', 'tutorial' );
 // load font awesome icons
 style( 'ldaporg', 'fa-4.7.0/css/font-awesome.min' );
 ?>
@@ -21,7 +22,7 @@ style( 'ldaporg', 'fa-4.7.0/css/font-awesome.min' );
 		<script id="navigation-header-tpl" type="text/x-handlebars-template">
 			<a href="#" id="add-group"><i class="fa fa-plus-square"></i><span><?php p($l->t( 'Add Group')); ?></span></a>
 		</script>
-		<ul id="navigation-header"><div class="icon-loading centered"></div></ul>
+		<div id="navigation-header"><div class="icon-loading centered"></div></div>
 		
 		<script id="navigation-tpl" type="text/x-handlebars-template">
 			<ul>
@@ -119,3 +120,24 @@ style( 'ldaporg', 'fa-4.7.0/css/font-awesome.min' );
 </div>
 
 <script id="loading-tpl" type="text/x-handlebars-template"><div class="icon-loading centered"></div></script>
+
+
+<script id="tutorial-tpl" type="text/x-handlebars-template">
+	<div id="tutorial-container" style="display: none">
+		<div class="body">
+			{{ message }}
+		</div>
+		<div class="footer">
+			<button id="tutorial-next"><?php p($l->t( 'Got it' )); ?></button>
+		</div>
+	</div>
+</script>
+
+<div id="tutorial-translations" style="display: none">
+	<p><?php p($l->t( 'For creating a group click here' )); ?></p>
+	<p><?php p($l->t( 'Select a group from the list to view details' )); ?></p>
+	<p><?php p($l->t( 'Be careful! This button will delete a group' )); ?></p>
+	<p><?php p($l->t( 'Search for a user here to add him to this group' )); ?></p>
+	<p><?php p($l->t( 'Here you can leave this group' )); ?></p>
+	<p><?php p($l->t( 'All members of this group are listed here' )); ?></p>
+</div>

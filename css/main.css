@@ -23,6 +23,8 @@
 	font-size: 16px;
 	line-height: 29px;
 	display: block;
+	position: relative;
+	z-index: 1;
 }
 
 #navigation-header > a:focus, #navigation-header > a:hover, #navigation-header > a:active {

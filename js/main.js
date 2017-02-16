@@ -99,12 +99,15 @@ Groups.prototype = {
 	},
 	// render everything
 	render: function() {
+		var deferred = $.Deferred();
 		var self = this;
-		return this.renderContent().done( function() {
+		this.renderContent().done( function() {
 			self.renderNavigationHeader().done( function() {
 				self.renderNavigation();
+				deferred.resolve();
 			});
 		});
+		return deferred.promise();
 	},
 	// render 
 	renderNavigationHeader: function() {
@@ -554,9 +557,185 @@ Groups.prototype = {
 	}
 };
 
+
+
+
+var Tutorial = function () {
+	this._baseUrl = OC.generateUrl( '/apps/ldaporg' );
+	this._state = 0;
+	this._max_state = 5;
+	this._parents = [
+		"#navigation-header",
+		"#group-navigation > ul",
+		"#group-navigation > ul",
+		"#info > .content-nav",
+		"#info > .content-nav",
+		"#info > h3",
+	];
+};
+
+Tutorial.prototype = {
+	// get the users current state
+	getState: function() {
+        var deferred = $.Deferred();
+        var self = this;
+		
+		// send request for the users setting
+		$.get( this._baseUrl + '/settings/personal/tutorial_state' ).done( function( state ) {
+			// check if the value is valid
+			if( Math.floor( state ) != state || !$.isNumeric( state ) ) state = 0;
+			// set the users state
+			self._state = state;
+			return deferred.resolve();
+		}).fail( function(data) {
+            deferred.reject();
+        });
+		return deferred.promise();
+	},
+	// gets the message for the current tutorial
+	getMessage: function() {
+		return $( $( '#tutorial-translations' ).children( 'p' )[ this._state ] ).text();
+	},
+	// gets the parent element for the current tutorial to be placed in
+	getTutorialParent: function() {
+		return $( this._parents[ this._state ] );
+	},
+	// execute a custom 
+	doCustomAction: function() {
+		switch( this._state ) {
+			case "0":
+				if( $( document ).width() < 769 && groups._superuser )
+					$( '#app-content' ).css( 'transform', 'translate3d(250px, 0px, 0px)' );
+				return !groups._superuser;
+				break;
+			case "1":
+				if( $( document ).width() < 769 )
+					$( '#app-content' ).css( 'transform', 'translate3d(250px, 0px, 0px)' );
+				break;
+			case "2":
+				if( $( document ).width() < 769 && groups._superuser )
+					$( '#app-content' ).css( 'transform', 'translate3d(250px, 0px, 0px)' );
+				return !groups._superuser;
+				break;
+			case "3":
+				if( $( document ).width() < 769 )
+					$( '#app-content' ).css( 'transform', 'translate3d(0px, 0px, 0px)' );
+				if( typeof( groups._activeGroup ) == 'undefined' || groups._activeGroup == null )
+					return groups.load( $( '#group-navigation > ul > li:first-child' ).attr( 'data-id' ) );
+				break;
+			case "4":
+				if( $( document ).width() < 769 )
+					$( '#app-content' ).css( 'transform', 'translate3d(0px, 0px, 0px)' );
+				if( typeof( groups._activeGroup ) == 'undefined' || groups._activeGroup == null )
+					return groups.load( $( '#group-navigation > ul > li:first-child' ).attr( 'data-id' ) );
+				break;
+			case "5":
+				if( $( document ).width() < 769 )
+					$( '#app-content' ).css( 'transform', 'translate3d(0px, 0px, 0px)' );
+				if( typeof( groups._activeGroup ) == 'undefined' || groups._activeGroup == null )
+					return groups.load( $( '#group-navigation > ul > li:first-child' ).attr( 'data-id' ) );
+				break;
+		}
+	},
+	// 
+	doCustomActionBefore: function() {
+		switch( this._state ) {
+			case 0:
+				
+				
+			
+		}
+	},
+	// show the next tutorial step and hide the current one
+    next: function() {
+		var self = this;
+		// remove the current tutorial
+		$( '#tutorial-container' ).remove();
+		
+		// save the current tutorial state
+		this.saveState();
+		// check if the user is already up to date with this tutorials
+		if( this._state > this._max_state ) return;
+		
+		// do custom action
+		var action_result = this.doCustomAction();
+		
+		// check if an ajax request is running
+		if( typeof( action_result ) != 'undefined' && typeof( action_result.readyState ) != 'undefined' ) {
+			action_result.done( function() {
+				// render new tutorial
+				var source = $( '#tutorial-tpl' ).html();
+				var template = Handlebars.compile( source );
+				var html = template( { message: self.getMessage() } );
+				self.getTutorialParent().append( html );
+				// add custom attribute
+				$( '#tutorial-container' ).attr( "tutorial-id", self._state ).slideDown( 300 );
+				
+				// increase state count
+				self._state++;
+				
+				// add action for going to the next tutorial
+				$( '#tutorial-next' ).one( 'click', function() {
+					self.next();
+				});
+			});
+		}
+		// check if the custom action wants to go to the next tutorial
+		else if( action_result ) {
+			this.next();
+		}
+		// keep going normally
+		else {
+			// render new tutorial
+			var source = $( '#tutorial-tpl' ).html();
+			var template = Handlebars.compile( source );
+			var html = template( { message: this.getMessage() } );
+			this.getTutorialParent().append( html );
+			// add custom attribute
+			$( '#tutorial-container' ).attr( "tutorial-id", this._state ).slideDown( 300 );
+			
+			// increase state count
+			this._state++;
+			
+			// add action for going to the next tutorial
+			$( '#tutorial-next' ).one( 'click', function() {
+				self.next();
+			});
+		}
+	},
+	// when the user finished the current tutorial, save his tutorial status
+	saveState: function() {
+		var settings = new Object();
+		settings.key = 'tutorial_state';
+		settings.value = this._state;
+		
+		// save the state
+		return $.ajax({
+            url: this._baseUrl + '/settings/personal',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify( settings )
+        });
+	},
+};
+
+
+
+
+var tutorial = new Tutorial();
+
 var groups = new Groups();
 groups.loadAll().done( function() {
-	groups.render();
+	groups.render().done( function() {
+		// only show the tutorial if the user is in at least one group
+		if( groups._groups.length < 1 ) return;
+		
+		// load the tutorial
+		tutorial.getState().done( function() {
+			// show the first tutorial text
+			tutorial.next();
+		});
+	});
 });
 
 

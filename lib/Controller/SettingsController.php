@@ -25,6 +25,7 @@ Class SettingsController extends Controller {
 	private $config;
 	// default values
 	private $default;
+	private $user_default;
 	
 	/**
 	 * @param string $AppName
@@ -38,6 +39,8 @@ Class SettingsController extends Controller {
 		$this->appName = $AppName;
 		$this->l = $l10n;
 		$this->config = $config;
+		// get the current users id
+		$this->uid = \OC::$server->getUserSession()->getUser()->getUID();
 		// fill default values
 		$this->default = array(
 			'superuser_group_id' => 500,
@@ -51,12 +54,17 @@ Class SettingsController extends Controller {
 			'welcome_mail_from_name' => 'Nextcloud',
 			'welcome_mail_message' => $this->l->t( 'Welcome to Nextcloud! We hope you enjoy your time here.' ),
 		);
+		$this->user_default = array(
+			'tutorial_state' => 0,
+		);
 	}
 	
 	/**
 	 * returns the value for the given general setting
 	 */
 	public function getSetting( $key ) {
+		// check if this is a valid setting
+		if( !isset( $this->default[ $key ] ) ) return false;
 		return $this->config->getAppValue( $this->appName, $key, $this->default[ $key ] );
 	}
 	
@@ -84,9 +92,9 @@ Class SettingsController extends Controller {
 	 */
 	public function updateSetting( $key, $value ) {
 		// check if the setting is an actual setting this app has
-		if( !array_key_exists( $key, $this->default ) ) return false;
+		if( !isset( $this->default[ $key ] ) ) return false;
 		// save the setting
-		return $this->config->setAppValue( $this->appName, $key, $value );
+		return !$this->config->setAppValue( $this->appName, $key, $value );
 	}
 	
 	/**
@@ -107,16 +115,27 @@ Class SettingsController extends Controller {
 	}
 	
 	/**
-	 * returns the value for the given setting from the given user
+	 * gets the value for the given setting
+	 * 
+	 * @param string $key
+	 * @NoAdminRequired
 	 */
-	public function getUserSetting( $user, $key ) {
-		return $this->config->getUserValue( $user, $this->appName, $key, $this->default[ $key ] );
+	public function getUserValue( $key ) {
+		// check if this is a valid setting
+		if( !isset( $this->user_default[ $key ] ) ) return false;
+		return $this->config->getUserValue( $this->uid, $this->appName, $key, $this->user_default[ $key ] );
 	}
 	
 	/**
-	 * returns the value from the LdapContacts App for the given setting from the given user
+	 * saves the given setting an returns a DataResponse
+	 * 
+	 * @param string $key
+	 * @param string $value
+	 * @NoAdminRequired
 	 */
-	public function getLdapContactUserSetting( $user, $key ) {
-		return $this->config->getUserValue( $user, 'ldapcontacts', $key, $this->default[ $key ] );
+	public function setUserValue( $key, $value ) {
+		// check if this is a valid setting
+		if( !isset( $this->user_default[ $key ] ) ) return false;
+		return $this->config->setUserValue( $this->uid, $this->appName, $key, $value );
 	}
 }
