@@ -33,8 +33,8 @@ Class PageController extends ContactController {
 	 * @param IConfig
 	 * @param SettingsController	
 	 */
-	public function __construct( $AppName, IRequest $request, IConfig $config, SettingsController $settings, IMailer $mailer, Il10n $l10n ) {
-		parent::__construct( $AppName, $request, $config );
+	public function __construct( $AppName, IRequest $request, IConfig $config, SettingsController $settings, IMailer $mailer, Il10n $l10n, $UserId ) {
+		parent::__construct( $AppName, $request, $config, $UserId );
 		// translation
 		$this->l2 = $l10n;
 		// save the settings controller
@@ -724,6 +724,9 @@ Class PageController extends ContactController {
 			$message->setTo( array( $user['mail'] => $user['firstname'] . ' ' . $user['lastname'] ) );
 			$message->setHtmlBody( $this->settings->getSetting( 'welcome_mail_message' ) );
 			$mailer->send( $message );
+			
+			// add the user to the default group
+			$this->addUser( $user, array( 'id' => $this->settings->getSetting( 'user_gidnumber' ) ) );
 		}
 		
 		// check if password reset is active
