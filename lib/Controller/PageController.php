@@ -736,7 +736,7 @@ Class PageController extends ContactController {
 			$message->setSubject( $this->settings->getSetting( 'welcome_mail_subject' ) );
 			$message->setFrom( array( $this->settings->getSetting( 'welcome_mail_from_adress' ) => $this->settings->getSetting( 'welcome_mail_from_name' ) ) );
 			$message->setTo( array( $user['mail'] => $user['firstname'] . ' ' . $user['lastname'] ) );
-			$message->setHtmlBody(  );
+			$message->setHtmlBody( $welcome_mail_message );
 			$mailer->send( $message );
 			
 			// add the user to the default group
