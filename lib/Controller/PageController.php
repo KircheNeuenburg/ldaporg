@@ -717,32 +717,30 @@ Class PageController extends ContactController {
 		
 		// if user was created successfully, send him a welcome mail
 		if( $request ) {
+
+            $welcome_mail_message = $this->settings->getSetting( 'welcome_mail_message' );
+
+			// check if password reset is active
+			if( $request && $this->settings->getSetting( 'pwd_reset_url_active' ) ) {
+				$custom_reset_link = '';
+				// get the request url
+				if( !empty( $get_link = $this->settings->getSetting( 'pwd_reset_url' ) ) && !empty( $get_attr = $this->settings->getSetting( 'pwd_reset_url_attr' ) ) && !empty( $get_attr_ldap_attr = $this->settings->getSetting( 'pwd_reset_url_attr_ldap_attr' ) ) ) {
+				    $custom_pwd_reset_link = $get_link . '&' . $get_attr . '=' . $user[ $get_attr_ldap_attr ];
+				}
+				// replace tag with custom reset link
+				str_replace( $welcome_mail_message, $this->settings->getSetting( 'pwd_reset_tag' ), $custom_reset_link);
+			}
+			$custom_reset_link = $this->settings->getSetting( 'pwd_reset_url' ) . $this->settings->getSetting( 'pwd_reset_url_attr' ) . $user[ $this->settings->getSetting( 'pwd_reset_url_attr_ldap_attr' ) ]
 			$mailer = \OC::$server->getMailer();
 			$message = $mailer->createMessage();
 			$message->setSubject( $this->settings->getSetting( 'welcome_mail_subject' ) );
 			$message->setFrom( array( $this->settings->getSetting( 'welcome_mail_from_adress' ) => $this->settings->getSetting( 'welcome_mail_from_name' ) ) );
 			$message->setTo( array( $user['mail'] => $user['firstname'] . ' ' . $user['lastname'] ) );
-			$message->setHtmlBody( $this->settings->getSetting( 'welcome_mail_message' ) );
+			$message->setHtmlBody(  );
 			$mailer->send( $message );
 			
 			// add the user to the default group
 			$this->addUser( $user, array( 'id' => $this->settings->getSetting( 'user_gidnumber' ) ) );
-		}
-		
-		// check if password reset is active
-		if( $request && $this->settings->getSetting( 'pwd_reset_url_active' ) ) {
-			// get the request url
-			$curl = curl_init( $this->settings->getSetting( 'pwd_reset_url' ) );
-			// set to POST request if needed
-			if( !empty( $post_attr = $this->settings->getSetting( 'pwd_reset_url_attr' ) ) && !empty( $post_attr_ldap_attr = $this->settings->getSetting( 'pwd_reset_url_attr_ldap_attr' ) ) ) {
-				$post_fields = $post_attr . '=' . $user[ $post_attr_ldap_attr ];
-				curl_setopt( $curl, CURLOPT_POST, 1 );
-				curl_setopt( $curl, CURLOPT_POSTFIELDS, $post_fields );
-			}
-			// we don't want any output
-			curl_setopt( $curl, CURLOPT_RETURNTRANSFER, true );
-			// send the request
-			curl_exec( $curl );
 		}
 		
 		// check if the request was a success or not

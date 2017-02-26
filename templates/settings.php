@@ -64,6 +64,10 @@ style( 'ldaporg', 'settings' );
 					<td><label for="ldaporg_pwd_reset_url_attr_ldap_attr"><?php p($l->t( 'Corresponding LDAP Attribute' ));?></label></td>
 					<td><input type="text" id="ldaporg_pwd_reset_url_attr_ldap_attr" name="pwd_reset_url_attr_ldap_attr" value="{{ settings.pwd_reset_url_attr_ldap_attr }}" placeholder="<?php p($l->t( 'LDAP Attribute' )); ?>"></td>
 				</tr>
+				<tr class="pwd_reset_url">
+					<td><label for="ldaporg_pwd_reset_tag"><?php p($l->t( 'Link tag to be replaced' ));?></label></td>
+					<td><input type="text" id="ldaporg_pwd_reset_tag" name="pwd_reset_tag" value="{{ settings.pwd_reset_tag }}" placeholder="<?php p($l->t( 'Link tag to be replaced' )); ?>"></td>
+				</tr>
 				<tr>
 					<td><label for="ldaporg_welcome_mail_subject"><?php p($l->t( 'Welcome Mail Subject' ));?></label></td>
 					<td><input type="text" id="ldaporg_welcome_mail_subject" name="welcome_mail_subject" value="{{ settings.welcome_mail_subject }}" placeholder="<?php p($l->t( 'Welcome Mail Subject' )); ?>"></td>
