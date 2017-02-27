@@ -722,15 +722,13 @@ Class PageController extends ContactController {
 
 			// check if password reset is active
 			if( $request && $this->settings->getSetting( 'pwd_reset_url_active' ) ) {
-				$custom_reset_link = '';
 				// get the request url
 				if( !empty( $get_link = $this->settings->getSetting( 'pwd_reset_url' ) ) && !empty( $get_attr = $this->settings->getSetting( 'pwd_reset_url_attr' ) ) && !empty( $get_attr_ldap_attr = $this->settings->getSetting( 'pwd_reset_url_attr_ldap_attr' ) ) ) {
 				    $custom_pwd_reset_link = $get_link . '&' . $get_attr . '=' . $user[ $get_attr_ldap_attr ];
 				}
 				// replace tag with custom reset link
-				str_replace( $welcome_mail_message, $this->settings->getSetting( 'pwd_reset_tag' ), $custom_reset_link);
+				str_replace( $this->settings->getSetting( 'pwd_reset_tag' ), $custom_pwd_reset_link, $welcome_mail_message );
 			}
-			$custom_reset_link = $this->settings->getSetting( 'pwd_reset_url' ) . $this->settings->getSetting( 'pwd_reset_url_attr' ) . $user[ $this->settings->getSetting( 'pwd_reset_url_attr_ldap_attr' ) ]
 			$mailer = \OC::$server->getMailer();
 			$message = $mailer->createMessage();
 			$message->setSubject( $this->settings->getSetting( 'welcome_mail_subject' ) );
