@@ -74,6 +74,7 @@ OC.L10N.register(
 	"Search for a user here to add him to this group" : "Suche nach einem Benutzer, um ihn zu der Gruppe hinzuzufügen",
 	"Here you can leave this group" : "Hier kannst du die Gruppe verlassen",
 	"All members of this group are listed here" : "Alle Mitglieder dieser Gruppe findest du hier",
-	"Got it" : "Alles klar"
+	"Got it" : "Alles klar",
+	"Link tag to be replaced" : "Link-Kennzeichnung, die Ersetzt wird"
 },
 "nplurals=2; plural=(n != 1);");

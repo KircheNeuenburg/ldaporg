@@ -49,6 +49,7 @@ Class SettingsController extends Controller {
 			'pwd_reset_url' => '',
 			'pwd_reset_url_attr' => 'login',
 			'pwd_reset_url_attr_ldap_attr' => 'mail',
+			'pwd_reset_tag' => '<reset_link>',
 			'welcome_mail_subject' => $this->l->t( 'Welcome to Nextcloud' ),
 			'welcome_mail_from_adress' => 'info@example.com',
 			'welcome_mail_from_name' => 'Nextcloud',
