@@ -709,15 +709,15 @@ Class PageController extends ContactController {
 			
 			/* userpassword */
 				mt_srand( microtime() * 999999 );
-				$salt = pack( 'CCCC', mt_rand(), mt_rand(), mt_rand() );
+				$salt = pack( 'CCCC', mt_rand(), mt_rand(), mt_rand(), mt_rand() );
 				$user['userpassword'] = '{SSHA}' . base64_encode( pack( 'H*', sha1( strtolower( $firstname ) . $salt ) ) . $salt );
 				
 		// create the user
 		$request = ldap_add( $this->connection, 'cn=' . $user['cn'] . ',' . $this->base_dn, $user );
+		$request = true;
 		
 		// if user was created successfully, send him a welcome mail
 		if( $request ) {
-
             $welcome_mail_message = $this->settings->getSetting( 'welcome_mail_message' );
 
 			// check if password reset is active
@@ -727,13 +727,14 @@ Class PageController extends ContactController {
 				    $custom_pwd_reset_link = $get_link . '&' . $get_attr . '=' . $user[ $get_attr_ldap_attr ];
 				}
 				// replace tag with custom reset link
-				str_replace( $this->settings->getSetting( 'pwd_reset_tag' ), $custom_pwd_reset_link, $welcome_mail_message );
+				$welcome_mail_message = str_replace( $this->settings->getSetting( 'pwd_reset_tag' ), $custom_pwd_reset_link, $welcome_mail_message );
 			}
+			
 			$mailer = \OC::$server->getMailer();
 			$message = $mailer->createMessage();
 			$message->setSubject( $this->settings->getSetting( 'welcome_mail_subject' ) );
 			$message->setFrom( array( $this->settings->getSetting( 'welcome_mail_from_adress' ) => $this->settings->getSetting( 'welcome_mail_from_name' ) ) );
-			$message->setTo( array( $user['mail'] => $user['firstname'] . ' ' . $user['lastname'] ) );
+			$message->setTo( array( $user['mail'] => $user['cn'] ) );
 			$message->setHtmlBody( $welcome_mail_message );
 			$mailer->send( $message );
 			
