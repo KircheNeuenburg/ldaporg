@@ -75,6 +75,9 @@ OC.L10N.register(
 	"Here you can leave this group" : "Hier kannst du die Gruppe verlassen",
 	"All members of this group are listed here" : "Alle Mitglieder dieser Gruppe findest du hier",
 	"Got it" : "Alles klar",
-	"Link tag to be replaced" : "Link-Kennzeichnung, die Ersetzt wird"
+	"Link tag to be replaced" : "Link-Kennzeichnung, die Ersetzt wird",
+	"Make Admin" : "Zum Admin machen",
+	"Remove Admin Privileges" : "Admin Privilegien entfernen",
+	"Remove" : "Entfernen"
 },
 "nplurals=2; plural=(n != 1);");
