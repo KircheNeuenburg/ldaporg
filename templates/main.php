@@ -69,10 +69,10 @@ style( 'ldaporg', 'fa-4.7.0/css/font-awesome.min' );
 												<a href="#" class="icon icon-more"></a>
 												<div class="hidden options">
 													<ul>
-														{{#if isadmin}}<li><a href="#" class="remove-admin" data-id="{{ id }}" data-action="removeAdmin"><i class="fa fa-user-times" aria-hidden="true"></i><span>Remove Admin Privileges</span></a></li>
-														{{else}}<li><a href="#" class="add-admin" data-id="{{ id }}" data-action="addAdmin"><i class="fa fa-user-plus" aria-hidden="true"></i><span>Make Admin</span></a></li>
+														{{#if isadmin}}<li><a href="#" class="remove-admin" data-id="{{ id }}" data-action="removeAdmin"><i class="fa fa-user-times" aria-hidden="true"></i><span><?php p($l->t( 'Remove Admin Privileges')); ?></span></a></li>
+														{{else}}<li><a href="#" class="add-admin" data-id="{{ id }}" data-action="addAdmin"><i class="fa fa-user-plus" aria-hidden="true"></i><span><?php p($l->t( 'Make Admin')); ?></span></a></li>
 														{{/if}}
-														<li><a href="#" class="remove" data-id="{{ id }}" data-action="remove"><span class="icon icon-delete"></span><span>Remove</span></a></li>
+														<li><a href="#" class="remove" data-id="{{ id }}" data-action="remove"><span class="icon icon-delete"></span><span><?php p($l->t( 'Remove')); ?></span></a></li>
 													</ul>
 												</div>
 											</td>
