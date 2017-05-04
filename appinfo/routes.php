@@ -39,5 +39,8 @@ return [
 		[ 'name' => 'Settings#updateSettings', 'url' => '/settings', 'verb' => 'POST' ],
 		[ 'name' => 'Settings#getUserValue', 'url' => '/settings/personal/{key}', 'verb' => 'GET' ],
 		[ 'name' => 'Settings#setUserValue', 'url' => '/settings/personal', 'verb' => 'POST' ],
+		[ 'name' => 'Page#loadForcedGroupMemberships', 'url' => '/load/group/forcedMembership', 'verb' => 'GET' ],
+		[ 'name' => 'Page#addForcedGroupMembership', 'url' => '/add/group/forcedMembership/{group_id}', 'verb' => 'GET' ],
+		[ 'name' => 'Page#removeForcedGroupMembership', 'url' => '/remove/group/forcedMembership/{group_id}', 'verb' => 'GET' ],
 	]
 ];
