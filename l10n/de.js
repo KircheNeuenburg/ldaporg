@@ -35,7 +35,7 @@ OC.L10N.register(
 	"Delete Group" : "Gruppe löschen",
 	"You are not a member of any group" : "Sie sind noch kein Mitglied einer Gruppe",
 	"Add Member" : "Mitglied hinzufügen",
-	"Leave Group" : "Gruppe verlassen",
+	"End Group Membership" : "Gruppen Mitgliedschaft beenden",
 	"Members" : "Mitglieder",
 	"Group Admin" : "Gruppen Admin",
 	"There are no members in this group yet" : "Diese Gruppe hat noch keine Mitglieder",
@@ -78,6 +78,9 @@ OC.L10N.register(
 	"Link tag to be replaced" : "Link-Kennzeichnung, die Ersetzt wird",
 	"Make Admin" : "Zum Admin machen",
 	"Remove Admin Privileges" : "Admin Privilegien entfernen",
-	"Remove" : "Entfernen"
+	"Remove" : "Entfernen",
+	"Users aren't forced to be a member of any group" : "",
+	"Mandatory group memberships" : "",
+	"add mandatory group" : ""
 },
 "nplurals=2; plural=(n != 1);");

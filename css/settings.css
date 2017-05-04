@@ -76,3 +76,100 @@
 	height: 25px;
 }
 /* end of messages */
+
+/* search */
+.force-group-membership {
+	display: inline-block;
+	margin: 5px;
+}
+
+.force-group-membership > * {
+	background-color: rgba(240, 240, 240, 0.9);
+	display: inline-block;
+	height: 23px;
+	padding: 1px 7px 0;
+}
+
+.force-group-membership > .name {
+	display: inline-block;
+	border-right: 1px solid grey;
+	border-radius: 5px 0 0 5px;
+}
+
+.force-group-membership > .remove {
+	border-left: 1px solid grey;
+	font-weight: bold;
+	z-index: 10;
+	cursor: pointer;
+	border-radius: 0 5px 5px 0;
+}
+
+.force-group-membership > .remove:focus, .force-group-membership > .remove:hover, .force-group-membership > .remove:active {
+	background-color: rgba(201, 201, 201, 1);
+}
+
+#LdapOrgSettings .search-container {
+	position: relative;
+}
+
+#LdapOrgSettings span.search {
+	position: relative;
+}
+
+#LdapOrgSettings .search-suggestions {
+	display: inline-block;
+	position: absolute;
+	top: 32px;
+	left: 2px;
+	z-index: 2;
+}
+
+#LdapOrgSettings .search-suggestions > .suggestion {
+	z-index: 2;
+	cursor: pointer;
+	background-color: rgba(240, 240, 240, 1);
+	padding: 3px 10px;
+}
+
+#LdapOrgSettings .search-suggestions > .suggestion:focus, #LdapOrgSettings .search-suggestions > .suggestion:hover, #LdapOrgSettings .search-suggestions > .suggestion:active {
+	background-color: rgba(201, 201, 201, 1);
+}
+
+#LdapOrgSettings .search-suggestions > .suggestion:first-child {
+	
+}
+
+#LdapOrgSettings .search-suggestions > .suggestion:last-child {
+	border-radius: 0 0 4px 4px;
+}
+
+#LdapOrgSettings input[type="search"] {
+	background: transparent url('../img/search.svg?v=1') no-repeat 5px center;
+	padding: 5px 25px;
+	transition: width 0.5s;
+}
+
+#LdapOrgSettings input[type="search"] + .abort {
+	opacity: 0;
+	transition: opacity 0.5s;
+	background: transparent url('../img/remove.svg?v=1') no-repeat center;
+	background-size: 100%;
+	width: 0;
+	height: 20px;
+	position: absolute;
+	top: 18px;
+	right: 12px;
+}
+
+#LdapOrgSettings input[type="search"].searching + .abort {
+	opacity: 0.5;
+	width: 20px;
+	cursor: pointer;
+	margin-top: -20px;
+}
+
+#LdapOrgSettings input[type="search"].searching + .abort:hover, #LdapOrgSettings input[type="search"].searching + .abort:focus, #LdapOrgSettings input[type="search"].searching + .abort:active {
+	opacity: 0.8;
+}
+/* end of search */
+}

@@ -91,6 +91,30 @@ style( 'ldaporg', 'settings' );
 	</script>
 	<div id="ldaporg-edit-settings"><div class="icon-loading"></div></div>
 	
+	<!-- force group membership section -->
+	<script id="ldaporg-force-group-membership-tpl" type="text/x-handlebars-template">
+		<div class="search-container">
+			<span class="search"><input type="search" id="ldaporg-search-non-forced-memberships-group" placeholder="<?php p($l->t('add mandatory group')); ?>"><span class="abort"></span></span>
+			<div class="search-suggestions"></div>
+		</div>
+		
+		{{#if groups}}
+			<div class="container">
+				{{#each groups}}
+					<span class="force-group-membership">
+						<span class="name">{{ name }}</span><span class="remove" target-id="{{ id }}">X</span>
+					</span>
+				{{/each}}
+			</div>
+		{{else}}
+			<b><?php p($l->t("Users aren't forced to be a member of any group")); ?></b>
+		{{/if}}
+	</script>
+	
+	<br><h3><?php p($l->t('Mandatory group memberships')); ?></h3><span id="ldaporg-force-group-membership-msg" class="msg"></span>
+	<div id="ldaporg-force-group-membership"><div class="icon-loading"></div></div>
+	<br>
+	
 	<h2><?php p($l->t( 'LDAP Users' )); ?></h2>
 	
 	<script id="ldaporg-existing-users-tpl" type="text/x-handlebars-template">

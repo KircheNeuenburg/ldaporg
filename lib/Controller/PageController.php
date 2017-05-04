@@ -651,7 +651,7 @@ Class PageController extends ContactController {
 				$user['sn'] = $lastname;
 			
 			/* cn */
-				$user['cn'] = $cn_orig = $firstname . '  ' . $lastname;
+				$user['cn'] = $cn_orig = $firstname . ' ' . $lastname;
 				$i = 1;
 				// add numbers at the end of the cn as long as there is another user with the same cn
 				$request = ldap_search( $this->connection, $this->base_dn, '(&' . $this->user_filter . '(cn=' . $user['cn'] . '))', array( 'cn' ) );
@@ -745,5 +745,34 @@ Class PageController extends ContactController {
 		// check if the request was a success or not
 		if( $request ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'User successfully created' ) ), 'status' => 'success' ) );
 		else return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Creating user failed' ) ), 'status' => 'error' ) );
+	}
+	
+	/**
+	 * returns a list of all the groups the user is forced to be a member of
+	 * 
+	 * @NoAdminRequired
+	 */
+	public function loadForcedGroupMemberships() {
+		
+	}
+	
+	/**
+	 * adds a group to the list of groups the user is forced to be a member of
+	 * 
+	 * @param string $group_id
+	 * @NoAdminRequired
+	 */
+	public function addForcedGroupMembership( $group_id ) {
+		
+	}
+	
+	/**
+	 * removes a group from the list of groups the user is forced to be a member of
+	 * 
+	 * @param string $group_id
+	 * @NoAdminRequired
+	 */
+	public function removeForcedGroupMembership( $group_id ) {
+		
 	}
 }
