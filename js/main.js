@@ -334,7 +334,7 @@ Groups.prototype = {
 			// admin only functions
 			if( canedit ) {
 				// expanding menu
-				$( ".menu > td > a" ).click( function( e ) {
+				$( ".members-menu > td > a" ).click( function( e ) {
 					e.stopPropagation();
 					var target = e.target;
 					var visible = $( ".options", target.parentElement ).is( ":visible" );
@@ -354,7 +354,7 @@ Groups.prototype = {
 				});
 				
 				// admin options for each user
-				$( ".menu > td > .options a" ).click( function( e ) {
+				$( ".members-menu > td > .options a" ).click( function( e ) {
 					var target = $( this );
 					// get the user id and required action
 					var action = target.attr( "data-action" );
@@ -635,15 +635,6 @@ Tutorial.prototype = {
 				if( typeof( groups._activeGroup ) == 'undefined' || groups._activeGroup == null )
 					return groups.load( $( '#group-navigation > ul > li:first-child' ).attr( 'data-id' ) );
 				break;
-		}
-	},
-	// 
-	doCustomActionBefore: function() {
-		switch( this._state ) {
-			case 0:
-				
-				
-			
 		}
 	},
 	// show the next tutorial step and hide the current one

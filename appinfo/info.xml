@@ -14,7 +14,7 @@
 	<dependencies>
         <user_ldap/>
         <ldapcontacts/>
-        <nextcloud min-version="11" max-version="11"/>
+        <nextcloud min-version="11" max-version="12"/>
     </dependencies>
 	
 	<settings>

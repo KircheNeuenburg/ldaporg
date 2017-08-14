@@ -147,25 +147,25 @@ table > tbody > tr > td:last-child > .options:after {
 	border-width: 10px;
 }
 
-.menu .options a {
+.members-menu .options a {
 	display: block;
 }
 
-.menu .options a:hover {
+.members-menu .options a:hover {
 	color: #a3a3a3;
 }
 
-.menu .options a > span.icon {
+.members-menu .options a > span.icon {
 	margin-bottom: 3px;
 	margin-right: 5px;
 }
 
-.menu .options a > i.fa {
+.members-menu .options a > i.fa {
 	margin-left: 2px;
 	margin-right: 5px;
 }
 
-.menu .options a:hover > span.icon-delete {
+.members-menu .options a:hover > span.icon-delete {
 	background-image: url('/core/img/actions/delete-hover.svg?v=1');
 }
 /* end of content area */

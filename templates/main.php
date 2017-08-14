@@ -63,7 +63,7 @@ style( 'ldaporg', 'fa-4.7.0/css/font-awesome.min' );
 							<tbody>
 								{{#if group.canedit}}
 									{{#each group.members}}
-										<tr class="menu">
+										<tr class="members-menu">
 											<td>{{ name }} {{#if isadmin}}<i class="fa fa-user-circle" aria-hidden="true" title="<?php p($l->t( 'Group Admin')); ?>"></i>{{/if}} </td>
 											<td>
 												<a href="#" class="icon icon-more"></a>
