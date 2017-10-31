@@ -716,28 +716,9 @@ Class PageController extends ContactController {
 		$request = ldap_add( $this->connection, 'cn=' . $user['cn'] . ',' . $this->base_dn, $user );
 		$request = true;
 		
-		// if user was created successfully, send him a welcome mail
 		if( $request ) {
-            $welcome_mail_message = $this->settings->getSetting( 'welcome_mail_message' );
-
-			// check if password reset is active
-			if( $request && $this->settings->getSetting( 'pwd_reset_url_active' ) ) {
-				// get the request url
-				if( !empty( $get_link = $this->settings->getSetting( 'pwd_reset_url' ) ) && !empty( $get_attr = $this->settings->getSetting( 'pwd_reset_url_attr' ) ) && !empty( $get_attr_ldap_attr = $this->settings->getSetting( 'pwd_reset_url_attr_ldap_attr' ) ) ) {
-				    $custom_pwd_reset_link = $get_link . '&' . $get_attr . '=' . $user[ $get_attr_ldap_attr ];
-				}
-				// replace tag with custom reset link
-				$welcome_mail_message = str_replace( $this->settings->getSetting( 'pwd_reset_tag' ), $custom_pwd_reset_link, $welcome_mail_message );
-			}
-			
-			$mailer = \OC::$server->getMailer();
-			$message = $mailer->createMessage();
-			$message->setSubject( $this->settings->getSetting( 'welcome_mail_subject' ) );
-			$message->setFrom( array( $this->settings->getSetting( 'welcome_mail_from_adress' ) => $this->settings->getSetting( 'welcome_mail_from_name' ) ) );
-			$message->setTo( array( $user['mail'] => $user['cn'] ) );
-			$message->setHtmlBody( $welcome_mail_message );
-			$mailer->send( $message );
-			
+			// if user was created successfully, send him a welcome mail
+            $this->sendWelcomeMail( $user );
 			// add the user to the default group
 			$this->addUser( $user, array( 'id' => $this->settings->getSetting( 'user_gidnumber' ) ) );
 		}
@@ -745,5 +726,46 @@ Class PageController extends ContactController {
 		// check if the request was a success or not
 		if( $request ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'User successfully created' ) ), 'status' => 'success' ) );
 		else return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Creating user failed' ) ), 'status' => 'error' ) );
+	}
+	
+	/*
+	 * send the welcome mail to the given user
+	 *
+	 * @param array $user		the user the mail should be send to
+	 */
+	protected function sendWelcomeMail( $user ) {
+		$welcome_mail_message = $this->settings->getSetting( 'welcome_mail_message' );
+
+		// check if password reset is active
+		if( $this->settings->getSetting( 'pwd_reset_url_active' ) ) {
+			// get the request url
+			if( !empty( $get_link = $this->settings->getSetting( 'pwd_reset_url' ) ) && !empty( $get_attr = $this->settings->getSetting( 'pwd_reset_url_attr' ) ) && !empty( $get_attr_ldap_attr = $this->settings->getSetting( 'pwd_reset_url_attr_ldap_attr' ) ) ) {
+				$custom_pwd_reset_link = $get_link . '&' . $get_attr . '=' . $user[ $get_attr_ldap_attr ];
+			}
+			// replace tag with custom reset link
+			$welcome_mail_message = str_replace( $this->settings->getSetting( 'pwd_reset_tag' ), $custom_pwd_reset_link, $welcome_mail_message );
+		}
+
+		$mailer = \OC::$server->getMailer();
+		$message = $mailer->createMessage();
+		$message->setSubject( $this->settings->getSetting( 'welcome_mail_subject' ) );
+		$message->setFrom( array( $this->settings->getSetting( 'welcome_mail_from_adress' ) => $this->settings->getSetting( 'welcome_mail_from_name' ) ) );
+		$message->setTo( array( $user['mail'] => $user['cn'] ) );
+		$message->setHtmlBody( $welcome_mail_message );
+		return !$mailer->send( $message );
+	}
+	
+	/*
+	 * same as $this->sendWelcomeMail, just adds a data response for ajax requests
+	 * 
+	 * @param array $user		the user the mail should be send to
+	 */
+	public function resendWelcomeMail( $user ) {
+		if( $this->sendWelcomeMail( $user ) ) {
+			return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Welcome Mail has been send' ) ), 'status' => 'success' ) );
+		}
+		else {
+			return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Sending the welcome mail failed' ) ), 'status' => 'error' ) );
+		}
 	}
 }

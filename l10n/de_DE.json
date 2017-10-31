@@ -11,7 +11,7 @@
 	"Leaving the group failed" : "Gruppe verlassen fehlgeschlagen",
 	"User successfully removed" : "Benutzer erfolgreich entfernt",
 	"Removing the user failed" : "Benutzer entfernen fehlgeschlagen",
-	"Group name can't be empty" : "Gruppenname darf nicht leer sein",
+	"Group name can't be empty" : "Gruppenname darf Resend Welcome Mailnicht leer sein",
 	"A group with the same name already exists" : "Eine Gruppe mit dem selben Namen existiert bereits",
 	"Group successfully created" : "Gruppe wurde erfolgreich erstellt",
 	"Creating the group failed" : "Gruppe erstellen fehlgeschlagen",
@@ -76,6 +76,11 @@
 	"Link tag to be replaced" : "Link-Kennzeichnung, die Ersetzt wird",
 	"Make Admin" : "Zum Admin machen",
 	"Remove Admin Privileges" : "Admin Privilegien entfernen",
-	"Remove" : "Entfernen"
+	"Remove" : "Entfernen",
+	"E-Mail:" : "E-Mail:",
+	"Resend Welcome Mail" : "Willkommens E-Mail erneut senden",
+	"Welcome Mail has been send" : "Willkommens E-Mail wurde gesendet",
+	"Sending the welcome mail failed" : "Senden der Willkommens E-Mail ist fehlgeschlagen",
+	"Create User" : "Benutzer erstellen"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

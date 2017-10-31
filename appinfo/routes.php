@@ -34,6 +34,7 @@ return [
 		[ 'name' => 'Page#removeGroup', 'url' => '/remove/group', 'verb' => 'POST' ],
 		[ 'name' => 'Page#deleteUser', 'url' => '/delete/user', 'verb' => 'POST' ],
 		[ 'name' => 'Page#createUser', 'url' => '/create/user', 'verb' => 'POST' ],
+		[ 'name' => 'Page#resendWelcomeMail', 'url' => '/welcomemail/resend', 'verb' => 'POST' ],
 		[ 'name' => 'Settings#getSettings', 'url' => '/settings', 'verb' => 'GET' ],
 		[ 'name' => 'Settings#updateSettings', 'url' => '/settings', 'verb' => 'POST' ],
 		[ 'name' => 'Settings#getUserValue', 'url' => '/settings/personal/{key}', 'verb' => 'GET' ],

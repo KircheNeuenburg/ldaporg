@@ -92,16 +92,37 @@ style( 'ldaporg', 'settings' );
 	<div id="ldaporg-edit-settings"><div class="icon-loading"></div></div>
 	
 	<h2><?php p($l->t( 'LDAP Users' )); ?></h2>
+	<div class="button" id="ldaporg-add-user"><span class="icon icon-add"></span> <?php p($l->t( 'Create User' )); ?></div>
+	<br>
 	
 	<script id="ldaporg-existing-users-tpl" type="text/x-handlebars-template">
 		{{#each users}}
 			<div class="user">
 				{{ name }}
-				<span class="icon icon-delete" title="<?php p($l->t( 'Delete User' )); ?>" data-id="{{ id }}"></span>
+				<span class="icon icon-play" title="<?php p($l->t( 'Select' )); ?>" data-id="{{ id }}"></span>
 			</div>
 		{{/each}}
 	</script>
 	<div id="ldaporg-existing-users"><div class="icon-loading"></div></div>
+	
+	<script id="ldaporg-user-details-tpl" type="text/x-handlebars-template">
+		<div class="user">
+			<h3>{{ user.name }}</h3>
+			<p><b><?php p($l->t( 'E-Mail:' )); ?></b> {{user.mail }}</p>
+			
+			<div class="button resend-welcome-mail" titlek="<?php p($l->t( 'Resend Welcome Mail' )); ?>" data-id="{{ user.id }}">
+				<?php p($l->t( 'Resend Welcome Mail' )); ?>&nbsp;
+				<span class="icon icon-mail"></span>
+			</div>
+			
+			<div class="delete-user button" title="<?php p($l->t( 'Delete User' )); ?>" data-id="{{ user.id }}">
+				<?php p($l->t( 'Delete User' )); ?>
+				<span class="icon icon-delete"></span>
+			</div>
+			
+			<div class="msg-container"><span class="msg"></span></div>
+		</div>
+	</script>
 	
 	<script id="ldaporg-user-content-tpl" type="text/x-handlebars-template">
 		<h2><?php p($l->t( 'Create a user' )); ?></h2>

@@ -78,6 +78,11 @@ OC.L10N.register(
 	"Link tag to be replaced" : "Link-Kennzeichnung, die Ersetzt wird",
 	"Make Admin" : "Zum Admin machen",
 	"Remove Admin Privileges" : "Admin Privilegien entfernen",
-	"Remove" : "Entfernen"
+	"Remove" : "Entfernen",
+	"E-Mail:" : "E-Mail:",
+	"Resend Welcome Mail" : "Willkommens E-Mail erneut senden",
+	"Welcome Mail has been send" : "Willkommens E-Mail wurde gesendet",
+	"Sending the welcome mail failed" : "Senden der Willkommens E-Mail ist fehlgeschlagen",
+	"Create User" : "Benutzer erstellen"
 },
 "nplurals=2; plural=(n != 1);");

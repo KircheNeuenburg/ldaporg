@@ -10,6 +10,12 @@ $(document).ready(function () {
 	};
 	
 	Users.prototype = {
+		init: function() {
+			var self = this;
+			$( '#ldaporg-add-user' ).click( function() {
+				self.renderContent();
+			});
+		},
 		loadUsers: function() {
 			var deferred = $.Deferred();
 			var self = this;
@@ -29,8 +35,34 @@ $(document).ready(function () {
 			var html = template( { users: users } );
 			$( '#ldaporg-existing-users' ).html( html );
 			
-			// button for deleting a user
-			$( '#ldaporg-existing-users > .user > span.icon-delete' ).click( function( e ) {
+			// button for selecting user
+			$( '#ldaporg-existing-users > .user > span.icon-play' ).click( function( e ) {
+				var id = $( this ).attr( 'data-id' );
+				// show the users details
+				self.showUserDetails( id );
+			});
+		},
+		showUserDetails: function( id ) {
+			var user = null;
+			// look for the user
+			$.each( this._users, function( key, value ) {
+				if( value.id == id ) {
+					user = value;
+					return;
+				}
+			});
+			
+			var self = this;
+			var source = $( '#ldaporg-user-details-tpl' ).html();
+			var template = Handlebars.compile( source );
+			var html = template( { user: user } );
+			$( '#ldaporg-user-content' ).html( html );
+			this.registerModifyUserButton();
+		},
+		registerModifyUserButton: function() {
+			var self = this;
+			// button for resending welcome email
+			$( '#ldaporg-user-content .button.resend-welcome-mail' ).click( function( e ) {
 				var id = $( this ).attr( 'data-id' );
 				var user = undefined;
 				// look for the user
@@ -41,7 +73,35 @@ $(document).ready(function () {
 					}
 				});
 				// check if the user was found
-				if( typeof( user ) == 'undefined' || user == null ) return;
+				if( typeof( user ) == 'undefined' || user == null ) { return; }
+				
+				// resend the welcome email
+				var data = { user: user };
+				$.ajax({
+					url: self._baseUrl + '/welcomemail/resend',
+					method: 'POST',
+					contentType: 'application/json',
+					data: JSON.stringify( data )
+				}).done( function( data ) {
+					console.log( data );
+					// show message
+					OC.msg.finishedSaving( '#ldaporg-user-content .msg', data );
+				});
+			});
+			
+			// button for deleting a user
+			$( '#ldaporg-user-content .button.delete-user' ).click( function( e ) {
+				var id = $( this ).attr( 'data-id' );
+				var user = undefined;
+				// look for the user
+				$.each( self._users, function( key, value ) {
+					if( value.id == id ) {
+						user = value;
+						return;
+					}
+				});
+				// check if the user was found
+				if( typeof( user ) == 'undefined' || user == null ) {return; }
 				
 				// check if the user should really be deleted
 				var source = $( '#ldaporg-user-delete-tpl' ).html();
@@ -69,7 +129,7 @@ $(document).ready(function () {
 								self.renderUsers( self._users );
 								// render the initial content area
 								self.renderContent();
-								// show a message that the use was deleted
+								// show a message that the user was deleted
 								OC.msg.finishedSaving( '#ldaporg-user-content .msg', data );
 							});
 						}
@@ -189,7 +249,6 @@ $(document).ready(function () {
 				contentType: 'application/json',
 				data: JSON.stringify( data )
 			}).done( function( data ) {
-				console.log( data );
 				// reload all settings
 				self.renderSettings().done( function() {
 					// saving the settings was successful
@@ -201,6 +260,7 @@ $(document).ready(function () {
 	};
 	
 	var users = new Users;
+	users.init();
 	users.loadUsers().done( function(){
 		users.renderContent();
 		users.renderUsers( users._users );
