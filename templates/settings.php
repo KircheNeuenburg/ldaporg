@@ -102,7 +102,7 @@ style( 'ldaporg', 'settings' );
 			<div class="container">
 				{{#each groups}}
 					<span class="force-group-membership">
-						<span class="name">{{ name }}</span><span class="remove" target-id="{{ id }}">X</span>
+						<span class="name">{{ cn }}</span><span class="remove" target-id="{{ id }}">X</span>
 					</span>
 				{{/each}}
 			</div>

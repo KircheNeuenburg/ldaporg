@@ -54,6 +54,7 @@ Class SettingsController extends Controller {
 			'welcome_mail_from_adress' => 'info@example.com',
 			'welcome_mail_from_name' => 'Nextcloud',
 			'welcome_mail_message' => $this->l->t( 'Welcome to Nextcloud! We hope you enjoy your time here.' ),
+			'forced_group_memberships' => '',
 		);
 		$this->user_default = array(
 			'tutorial_state' => 0,

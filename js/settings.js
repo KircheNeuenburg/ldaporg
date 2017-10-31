@@ -265,10 +265,16 @@ $(document).ready(function () {
 			var self = this;
 			var deferred = $.Deferred();
 			
-			$.get( this._baseUrl + '/load/group/forcedMembership' ).done( function( groups ) {
-				// reset variables
-				self._forcedGroupMemberships = groups;
-				deferred.resolve();
+			$.get( this._baseUrl + '/load/group/forcedMembership' ).done( function( data ) {
+				console.log( data );
+				if( data.status == 'success' ) {
+					// reset variables
+					self._forcedGroupMemberships = data.data;
+					deferred.resolve();
+				}
+				else {
+					deferred.reject();
+				}
 			}).fail( function() {
 				deferred.reject();
 			});
@@ -279,19 +285,27 @@ $(document).ready(function () {
 			var self = this;
 			var source = $('#ldaporg-force-group-membership-tpl').html();
 			var template = Handlebars.compile(source);
-			var html = template({hidden: this._forcedGroupMemberships});
+			// get the forced groups details
+			var groups = [];
+			$.each( this._forcedGroupMemberships, function( k, id ) {
+				$.each( self._groups, function( k2, group ) {
+					// check if this is the group
+					if( group.id == id ) {
+						groups.push( group );
+						return false;
+					}
+				});
+			});
+			
+			var html = template({ groups: groups });
 			$('#ldaporg-force-group-membership').html(html);
 			
 			// make a group membership optional again
 			$('#ldaporg-force-group-membership .remove').click( function() {
 				// get the groups id
 				var id = this.attributes['target-id'].value;
-				
-				// go through all groups and find the one the id is fitting to
-				$.each( self._forcedGroupMemberships, function(index, data) {
-					// if this is the gropu, request a forced membership
-					if( data['id'] == id ) self.forceGroupMembership(data);
-				});
+				// unforce the groups membership
+				self.unforceGroupMembership( id );
 			});
 			
 			// search form for forcing a gropu membership
@@ -315,10 +329,12 @@ $(document).ready(function () {
 		},
 		// force the membership of a group
 		forceGroupMembership: function(group) {
+			console.log( 'force' );
 			var self = this;
 			OC.msg.startSaving( '#ldaporg-force-group-membership-msg' );
 			// send request
 			$.get( this._baseUrl + '/add/group/forcedMembership/' + encodeURI(group.id), function(data) {
+				console.log( data );
 				// reload all data
 				self.loadForcedGroupMemberships().done( function() {
 					self.renderForcedGroupMemberships();
@@ -327,11 +343,12 @@ $(document).ready(function () {
 			});
 		},
 		// make a certain group membership optional again
-		unforceGroupMembership: function(group) {
+		unforceGroupMembership: function (group_id ) {
+			console.log( 'unforce' );
 			var self = this;
 			OC.msg.startSaving( '#ldaporg-force-group-membership-msg' );
 			// send request
-			$.get( this._baseUrl + '/remove/group/forcedMembership/' + encodeURI(group.id), function(data) {
+			$.get( this._baseUrl + '/remove/group/forcedMembership/' + encodeURI( group_id ), function( data ) {
 				// reload all data
 				self.loadForcedGroupMemberships().done( function() {
 					self.renderForcedGroupMemberships();
@@ -386,7 +403,7 @@ $(document).ready(function () {
 					.data('contact', group)
 					// when clicked on the group, it will be hidden
 					.click(function() {
-						self.unforceGroupMembership( $(this).data('contact') );
+						self.forceGroupMembership( $(this).data('contact') );
 					});
 					// add the option to the search suggestions
 					$('#ldaporg-force-group-membership .search + .search-suggestions').append(html);

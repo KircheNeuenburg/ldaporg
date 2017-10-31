@@ -86,6 +86,9 @@ OC.L10N.register(
 	"Create User" : "Benutzer erstellen",
 	"Users aren't forced to be a member of any group" : "Die Benutzer sind nicht gezwungen Mitglied einer bestimmten Gruppe zu sein",
 	"Mandatory group memberships" : "Verpflichtende Gruppenmitgliedschaft",
-	"add mandatory group" : "verpflichtende Gruppe hinzufügen"
+	"add mandatory group" : "verpflichtende Gruppe hinzufügen",
+	"Group successfully added" : "Gruppe erfolgreich hinzugefügt",
+	"Adding the group failed" : "Hinzufügen der Gruppe fehlgeschlagen",
+	"Select" : "Auswählen"
 },
 "nplurals=2; plural=(n != 1);");

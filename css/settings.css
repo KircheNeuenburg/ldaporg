@@ -156,6 +156,7 @@
 	background: transparent url('../img/search.svg?v=1') no-repeat 5px center;
 	padding: 5px 25px;
 	transition: width 0.5s;
+	min-width: 250px;
 }
 
 #LdapOrgSettings input[type="search"] + .abort {

@@ -769,6 +769,33 @@ Class PageController extends ContactController {
 			return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Sending the welcome mail failed' ) ), 'status' => 'error' ) );
 		}
 	}
+	
+	/**
+	 * get an array of all the groups the user is forced to be a member of
+	 */
+	protected function getForcedGroupMemberships() {
+		// get the forced groups
+		$forced_groups = $this->settings->getSetting( 'forced_group_memberships' );
+		
+		if( empty( $forced_groups ) ) {
+			// no groups given
+			return [];
+		}
+		else {
+			// return groups as array
+			return explode( ',', $this->settings->getSetting( 'forced_group_memberships' ) );
+		}
+	}
+	
+	/**
+	 * update the list of forced group memberships
+	 * 
+	 * @param array $groups		an array of all forced group memberships
+	 */
+	protected function updateForcedGroupMemberships( $groups ) {
+		$groups = implode( ',', $groups );
+		return $this->settings->updateSetting( 'forced_group_memberships', $groups );
+	}
 
 	/**
 	 * returns a list of all the groups the user is forced to be a member of
@@ -776,7 +803,7 @@ Class PageController extends ContactController {
 	 * @NoAdminRequired
 	 */
 	public function loadForcedGroupMemberships() {
-		
+		return new DataResponse( array( 'data' => $this->getForcedGroupMemberships(), 'status' => 'success' ) );
 	}
 	
 	/**
@@ -786,7 +813,21 @@ Class PageController extends ContactController {
 	 * @NoAdminRequired
 	 */
 	public function addForcedGroupMembership( $group_id ) {
+		// get the current forced groups
+		$forced_groups = $this->getForcedGroupMemberships();
+		// only add the group if it isn't in the list alredy
+		if( !array_search( $group_id, $forced_groups ) ) {
+			// add the group to the list
+			array_push( $forced_groups, $group_id );
+			// save the list
+			if( !$this->updateForcedGroupMemberships( $forced_groups ) ) {
+				// something went wrong
+				return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Adding the group failed' ) ), 'status' => 'error' ) );
+			}
+		}
 		
+		// group was successfully added
+		return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Group successfully added' ) ), 'status' => 'success' ) );
 	}
 	
 	/**
@@ -796,6 +837,20 @@ Class PageController extends ContactController {
 	 * @NoAdminRequired
 	 */
 	public function removeForcedGroupMembership( $group_id ) {
-		
+		// get the current forced groups
+		$forced_groups = $this->getForcedGroupMemberships();
+		// remove the given group from the list
+		if( ( $key = array_search( $group_id, $forced_groups ) ) !== false ) {
+			unset( $forced_groups[ $key ] );
+		}
+		// save the list
+		if( $this->updateForcedGroupMemberships( $forced_groups ) ) {
+			// group was successfully added
+			return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Group successfully removed' ) ), 'status' => 'success' ) );
+		}
+		else {
+			// something went wrong
+			return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Removing the group failed' ) ), 'status' => 'error' ) );
+		}
 	}
 }
