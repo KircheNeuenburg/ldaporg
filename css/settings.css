@@ -36,6 +36,15 @@
 	padding: 0 10px 0 20px;
 }
 
+#ldaporg-user-content .delete-user {
+	transition: background-color 0.3s, color 0.3s;
+}
+
+#ldaporg-user-content .delete-user:focus, #ldaporg-user-content .delete-user:hover, #ldaporg-user-content .delete-user:active {
+    background-color: #E57B7B;
+    color: white;
+}
+
 #ldaporg-edit-settings input[type="text"], #ldaporg-edit-settings input[type="url"], #ldaporg-edit-settings input[type="email"],
 #ldaporg-edit-settings textarea {
 	width: 100%;
