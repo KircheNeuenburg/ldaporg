@@ -51,7 +51,7 @@ style( 'ldaporg', 'fa-4.7.0/css/font-awesome.min' );
 						<span class="search"><input type="search" id="group_add_member" placeholder="<?php p($l->t('Add Member')); ?>"><span class="abort"></span></span>
 						<div class="search-suggestions"></div>
 					{{/if}}
-					{{#if me}}<a href="#" id="leave_group" class="leave"><?php p($l->t('End Group Membership')); ?></a>{{/if}}
+					{{#if me}}{{#if notForcedMembership }}<a href="#" id="leave_group" class="leave"><?php p($l->t('End Group Membership')); ?></a>{{/if}}{{/if}}
 				</div>
 				
 				<div class="msg-container"><span class="msg"></span></div>

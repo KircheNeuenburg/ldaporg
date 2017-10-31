@@ -83,6 +83,16 @@ OC.L10N.register(
 	"Resend Welcome Mail" : "Willkommens E-Mail erneut senden",
 	"Welcome Mail has been send" : "Willkommens E-Mail wurde gesendet",
 	"Sending the welcome mail failed" : "Senden der Willkommens E-Mail ist fehlgeschlagen",
-	"Create User" : "Benutzer erstellen"
+	"Create User" : "Benutzer erstellen",
+	"Users aren't forced to be a member of any group" : "Die Benutzer sind nicht gezwungen Mitglied einer bestimmten Gruppe zu sein",
+	"Mandatory group memberships" : "Verpflichtende Gruppenmitgliedschaft",
+	"add mandatory group" : "verpflichtende Gruppe hinzufügen",
+	"Group successfully added" : "Gruppe erfolgreich hinzugefügt",
+	"Adding the group failed" : "Hinzufügen der Gruppe fehlgeschlagen",
+	"Select" : "Auswählen",
+	"Apply forced group memberships to all users" : "Verpflichtende Gruppenmitgliedschaften auf alle Benutzer anwenden",
+	"Applied forced group memberships" : "Verpflichtende Gruppenmitgliedschaften erfolgreich angewendet",
+	"Applying forced group memberships failed" : "Verpflichtende Gruppenmitgliedschaften anwenden war nicht erfolgreich",
+	"Removing users from this group is not possible" : "Benutzer von dieser Gruppe zu entfernen ist nicht erlaubt"
 },
 "nplurals=2; plural=(n != 1);");

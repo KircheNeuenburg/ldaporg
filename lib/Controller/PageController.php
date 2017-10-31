@@ -440,6 +440,11 @@ Class PageController extends ContactController {
 		// check if the user is allowed to edit this group or wants to remove himself
 		if( $user['mail'] != $this->mail && !$this->userCanEdit( $group['id'] ) )return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Permission denied' ) ), 'status' => 'error' ) );
 		
+		// the user can't be removed, if this is a forced group
+		if( $this->isForcedGroup( $group['id'] ) ) {
+			return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Removing users from this group is not possible' ) ), 'status' => 'error' ) );
+		}
+		
 		// let the helper function handle the actual work
 		$return = $this->removeUserHelper( $user['mail'], $group['id'] );
 		
@@ -520,12 +525,12 @@ Class PageController extends ContactController {
 		if( empty( $group_name ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( "Group name can't be empty" ) ), 'status' => 'error' ) );
 		
 		// check if there is already a group with the same name
-		$request = ldap_search( $this->connection, $this->group_dn, '(&' . $this->ldap_group_filter . '(cn=' . $group_name . '))' );
+		$request = ldap_search( $this->connection, $this->group_dn, '(&' . $this->group_filter . '(cn=' . $group_name . '))' );
 		$result = ldap_get_entries( $this->connection, $request );
 		if( $result['count'] != 0 ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'A group with the same name already exists' ) ), 'status' => 'error' ) );
 		
 		// get the highest current gidNumber
-		$request = ldap_search( $this->connection, $this->group_dn, '(&' . $this->ldap_group_filter . '(gidnumber=*))', array( 'gidnumber' ) );
+		$request = ldap_search( $this->connection, $this->group_dn, '(&' . $this->group_filter . '(gidnumber=*))', array( 'gidnumber' ) );
 		$result = ldap_get_entries( $this->connection, $request );
 		
 		// if there isn't a gidnumber given yet, start counting at 500
@@ -651,7 +656,7 @@ Class PageController extends ContactController {
 				$user['sn'] = $lastname;
 			
 			/* cn */
-				$user['cn'] = $cn_orig = $firstname . '  ' . $lastname;
+				$user['cn'] = $cn_orig = $firstname . ' ' . $lastname;
 				$i = 1;
 				// add numbers at the end of the cn as long as there is another user with the same cn
 				$request = ldap_search( $this->connection, $this->base_dn, '(&' . $this->user_filter . '(cn=' . $user['cn'] . '))', array( 'cn' ) );
@@ -719,8 +724,15 @@ Class PageController extends ContactController {
 		if( $request ) {
 			// if user was created successfully, send him a welcome mail
             $this->sendWelcomeMail( $user );
+
 			// add the user to the default group
-			$this->addUser( $user, array( 'id' => $this->settings->getSetting( 'user_gidnumber' ) ) );
+			$this->addUserHelper( $user['mail'], $this->settings->getSetting( 'user_gidnumber') );
+			
+			// add the user to all forced membership groups
+			$forced_groups = $this->getForcedGroupMemberships();
+			foreach( $forced_groups as $group_id ) {
+				$this->addUserHelper( $user['mail'], $group_id );
+			}
 		}
 		
 		// check if the request was a success or not
@@ -767,5 +779,134 @@ Class PageController extends ContactController {
 		else {
 			return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Sending the welcome mail failed' ) ), 'status' => 'error' ) );
 		}
+	}
+	
+	/**
+	 * get an array of all the groups the user is forced to be a member of
+	 */
+	protected function getForcedGroupMemberships() {
+		// get the forced groups
+		$forced_groups = $this->settings->getSetting( 'forced_group_memberships' );
+		
+		if( empty( $forced_groups ) ) {
+			// no groups given
+			return [];
+		}
+		else {
+			// return groups as array
+			return explode( ',', $this->settings->getSetting( 'forced_group_memberships' ) );
+		}
+	}
+	
+	/**
+	 * update the list of forced group memberships
+	 * 
+	 * @param array $groups		an array of all forced group memberships
+	 */
+	protected function updateForcedGroupMemberships( $groups ) {
+		$groups = implode( ',', $groups );
+		return $this->settings->updateSetting( 'forced_group_memberships', $groups );
+	}
+
+	/**
+	 * returns a list of all the groups the user is forced to be a member of
+	 * 
+	 * @NoAdminRequired
+	 */
+	public function loadForcedGroupMemberships() {
+		return new DataResponse( array( 'data' => $this->getForcedGroupMemberships(), 'status' => 'success' ) );
+	}
+	
+	/**
+	 * adds a group to the list of groups the user is forced to be a member of
+	 * 
+	 * @param string $group_id
+	 */
+	public function addForcedGroupMembership( $group_id ) {
+		// get the current forced groups
+		$forced_groups = $this->getForcedGroupMemberships();
+		// only add the group if it isn't in the list alredy
+		if( !array_search( $group_id, $forced_groups ) ) {
+			// add the group to the list
+			array_push( $forced_groups, $group_id );
+			// save the list
+			if( !$this->updateForcedGroupMemberships( $forced_groups ) ) {
+				// something went wrong
+				return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Adding the group failed' ) ), 'status' => 'error' ) );
+			}
+		}
+		
+		// group was successfully added
+		return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Group successfully added' ) ), 'status' => 'success' ) );
+	}
+	
+	/**
+	 * removes a group from the list of groups the user is forced to be a member of
+	 * 
+	 * @param string $group_id
+	 */
+	public function removeForcedGroupMembership( $group_id ) {
+		// get the current forced groups
+		$forced_groups = $this->getForcedGroupMemberships();
+		// remove the given group from the list
+		if( ( $key = array_search( $group_id, $forced_groups ) ) !== false ) {
+			unset( $forced_groups[ $key ] );
+		}
+		// save the list
+		if( $this->updateForcedGroupMemberships( $forced_groups ) ) {
+			// group was successfully added
+			return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Group successfully removed' ) ), 'status' => 'success' ) );
+		}
+		else {
+			// something went wrong
+			return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Removing the group failed' ) ), 'status' => 'error' ) );
+		}
+	}
+	
+	/**
+	 * load all groups
+	 */
+	public function adminLoadGroups() {
+		return new DataResponse( $this->get_groups( $this->group_filter ) );
+	}
+	
+	/**
+	 * apply forced group memberships to all users
+	 * 
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	public function applyForcedGroupMemberships() {
+		// get all users
+		$users = $this->get_users( $this->user_filter );
+		// get all forced groups
+		$forced_groups = $this->getForcedGroupMemberships();
+		
+		// add every user to every forced group
+		$error = 0;
+		foreach( $forced_groups as $group_id ) {
+			foreach( $users as $user ) {
+				$error |= !$this->addUserHelper( $user['mail'], $group_id );
+			}
+		}
+		
+		if( $error ) {
+			// something went wrong
+			return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Applying forced group memberships failed' ) ), 'status' => 'error' ) );
+		}
+		else {
+			// everything went fine
+			return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Applied forced group memberships' ) ), 'status' => 'success' ) );
+		}
+	}
+	
+	/**
+	 * checks if the given group has forced membership
+	 * 
+	 * @param int $group_id		the id of the group to be tested
+	 */
+	protected function isForcedGroup( $group_id ) {
+		$forced_groups = $this->getForcedGroupMemberships();
+		return array_search( $group_id, $forced_groups ) !== false;
 	}
 }

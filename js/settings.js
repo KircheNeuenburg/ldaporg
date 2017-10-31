@@ -7,6 +7,10 @@ $(document).ready(function () {
 		this._baseUrl = OC.generateUrl( '/apps/ldaporg' );
 		this._ldapcontacts_baseUrl = OC.generateUrl( '/apps/ldapcontacts' );
 		this._users = [];
+		this._groups = [];
+		this._forcedGroupMemberships = [];
+		this._lastForcedGroupMembershipsSearch = '';
+		this._forcedGroupMembershipsSearchId = 0;
 	};
 	
 	Users.prototype = {
@@ -83,7 +87,6 @@ $(document).ready(function () {
 					contentType: 'application/json',
 					data: JSON.stringify( data )
 				}).done( function( data ) {
-					console.log( data );
 					// show message
 					OC.msg.finishedSaving( '#ldaporg-user-content .msg', data );
 				});
@@ -255,8 +258,178 @@ $(document).ready(function () {
 					OC.msg.finishedSaving( '#ldaporg_settings_form .msg', data );
 				});
 			});
-			deferred.promise();
+			return deferred.promise();
 		},
+		loadForcedGroupMemberships: function() {
+			var self = this;
+			var deferred = $.Deferred();
+			
+			$.get( this._baseUrl + '/load/group/forcedMembership' ).done( function( data ) {
+				if( data.status == 'success' ) {
+					// reset variables
+					self._forcedGroupMemberships = data.data;
+					deferred.resolve();
+				}
+				else {
+					deferred.reject();
+				}
+			}).fail( function() {
+				deferred.reject();
+			});
+			return deferred.promise();
+		},
+		// renders the settings for forcing group memberships
+		renderForcedGroupMemberships: function () {
+			var self = this;
+			var source = $('#ldaporg-force-group-membership-tpl').html();
+			var template = Handlebars.compile(source);
+			// get the forced groups details
+			var groups = [];
+			$.each( this._forcedGroupMemberships, function( k, id ) {
+				$.each( self._groups, function( k2, group ) {
+					// check if this is the group
+					if( group.id == id ) {
+						groups.push( group );
+						return false;
+					}
+				});
+			});
+			
+			var html = template({ groups: groups });
+			$('#ldaporg-force-group-membership').html(html);
+			
+			// make a group membership optional again
+			$('#ldaporg-force-group-membership .remove').click( function() {
+				// get the groups id
+				var id = this.attributes['target-id'].value;
+				// unforce the groups membership
+				self.unforceGroupMembership( id );
+			});
+			
+			// search form for forcing a gropu membership
+			$('#ldaporg-search-non-forced-memberships-group').on( "change keyup paste", function() {
+				var value = $( this ).val();
+				
+				// check if we are still searching
+				if( value == '' ) $( this ).removeClass( 'searching' );
+				else $( this ).addClass( 'searching' );
+				
+				// search for the given value and render the navigation
+				self.searchNonforcedMembershipGroups( value );
+			});
+			
+			// abort the search
+			$('#ldaporg-search-non-forced-memberships-group + .abort').click( function() {
+				// clear the search form
+				$('#ldaporg-search-non-forced-memberships-group').val('');
+				$('#ldaporg-search-non-forced-memberships-group').trigger( 'change' );
+			});
+			
+			// apply forced group memberships
+			$( '#ldaporg-apply-forced-group-membership' ).click( function() {
+				OC.msg.startSaving( '#ldaporg-force-group-membership-msg' );
+				// send request
+				$.get( self._baseUrl + '/apply/forcedMemberships', function(data) {
+					OC.msg.finishedSaving( '#ldaporg-force-group-membership-msg', data );
+				});
+			});
+		},
+		// force the membership of a group
+		forceGroupMembership: function(group) {
+			var self = this;
+			OC.msg.startSaving( '#ldaporg-force-group-membership-msg' );
+			// send request
+			$.get( this._baseUrl + '/add/group/forcedMembership/' + encodeURI(group.id), function(data) {
+				// reload all data
+				self.loadForcedGroupMemberships().done( function() {
+					self.renderForcedGroupMemberships();
+					OC.msg.finishedSaving( '#ldaporg-force-group-membership-msg', data );
+				});
+			});
+		},
+		// make a certain group membership optional again
+		unforceGroupMembership: function (group_id ) {
+			var self = this;
+			OC.msg.startSaving( '#ldaporg-force-group-membership-msg' );
+			// send request
+			$.get( this._baseUrl + '/remove/group/forcedMembership/' + encodeURI( group_id ), function( data ) {
+				// reload all data
+				self.loadForcedGroupMemberships().done( function() {
+					self.renderForcedGroupMemberships();
+					OC.msg.finishedSaving( '#ldaporg-force-group-membership-msg', data );
+				});
+			});
+		},
+		searchNonforcedMembershipGroups: function ( search ) {
+			if( search == this._lastForcedGroupMembershipsSearch ) return false;
+			this._lastForcedGroupMembershipsSearch = search;
+			
+			// if the search form is empty, clean up
+			if( search == '' ) {
+				this.renderNonforcedMembershipGroupSuggestions(this._groups);
+				return true;
+			}
+			
+			var self = this;
+			this._forcedGroupMembershipsSearchId++;
+			var id = this._forcedGroupMembershipsSearchId;
+			search = search.toLowerCase();
+			
+			var matches = [];
+			
+			$( this._groups ).each( function( i, group ) {
+				if( self._forcedGroupMembershipsSearchId != id ) return false;
+				$.each( group, function( key, value ) {
+					if( typeof( value ) != 'string' && typeof( value ) != 'number' ) return;
+					value = String( value ).toLowerCase();
+					if( ~value.indexOf( search ) ) {
+						matches.push( group );
+						return false;
+					}
+				});
+			});
+			return self.renderNonforcedMembershipGroupSuggestions(matches)
+		},
+		renderNonforcedMembershipGroupSuggestions: function(groups) {
+			var self = this;
+			// clear the suggestions area
+			$('#ldaporg-force-group-membership .search + .search-suggestions').empty();
+			// don't show all groups at once
+			if( groups != this._groups ) {
+				// show all found groups
+				$.each( groups, function(i, group) {
+					// render the search suggestion
+					var html = $(document.createElement('div'))
+					.addClass('suggestion')
+					// add the groups name
+					.text(group.cn)
+					// add the contact information to the suggestion
+					.data('contact', group)
+					// when clicked on the group, it will be hidden
+					.click(function() {
+						self.forceGroupMembership( $(this).data('contact') );
+					});
+					// add the option to the search suggestions
+					$('#ldaporg-force-group-membership .search + .search-suggestions').append(html);
+				});
+			}
+			
+			return true;
+		},
+		// load all visible groups
+		loadGroups: function() {
+			var deferred = $.Deferred();
+			var self = this;
+			// load the groups
+			$.get( this._baseUrl + '/admin/load', function(data) {
+				self._groups = data;
+				deferred.resolve();
+			}).fail( function() {
+				// groups couldn't be loaded
+				deferred.reject();
+			});
+			return deferred.promise();
+		}
 	};
 	
 	var users = new Users;
@@ -265,7 +438,11 @@ $(document).ready(function () {
 		users.renderContent();
 		users.renderUsers( users._users );
 	});
+	users.loadGroups().done( function() {
+		users.loadForcedGroupMemberships().done( function() {
+			users.renderForcedGroupMemberships();
+		});
+	});
 	users.renderSettings();
 });
-
 })(OC, window, jQuery);
