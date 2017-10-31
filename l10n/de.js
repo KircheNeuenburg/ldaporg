@@ -89,6 +89,9 @@ OC.L10N.register(
 	"add mandatory group" : "verpflichtende Gruppe hinzufügen",
 	"Group successfully added" : "Gruppe erfolgreich hinzugefügt",
 	"Adding the group failed" : "Hinzufügen der Gruppe fehlgeschlagen",
-	"Select" : "Auswählen"
+	"Select" : "Auswählen",
+	"Apply forced group memberships to all users" : "Verpflichtende Gruppenmitgliedschaften auf alle Benutzer anwenden",
+	"Applied forced group memberships" : "Verpflichtende Gruppenmitgliedschaften erfolgreich angewendet",
+	"Applying forced group memberships failed" : "Verpflichtende Gruppenmitgliedschaften anwenden war nicht erfolgreich"
 },
 "nplurals=2; plural=(n != 1);");

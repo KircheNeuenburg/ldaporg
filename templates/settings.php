@@ -111,9 +111,11 @@ style( 'ldaporg', 'settings' );
 		{{/if}}
 	</script>
 	
-	<br><h3><?php p($l->t('Mandatory group memberships')); ?></h3><span id="ldaporg-force-group-membership-msg" class="msg"></span>
+	<br><h2><?php p($l->t('Mandatory group memberships')); ?></h2>
+	<span id="ldaporg-force-group-membership-msg" class="msg"></span>
 	<div id="ldaporg-force-group-membership"><div class="icon-loading"></div></div>
-	<br>
+	<div class="button" id="ldaporg-apply-forced-group-membership"><?php p($l->t( 'Apply forced group memberships to all users' )); ?></div>
+	<br><br><br>
 	
 	<h2><?php p($l->t( 'LDAP Users' )); ?></h2>
 	<div class="button" id="ldaporg-add-user"><span class="icon icon-add"></span> <?php p($l->t( 'Create User' )); ?></div>

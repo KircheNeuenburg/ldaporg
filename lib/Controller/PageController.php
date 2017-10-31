@@ -810,7 +810,6 @@ Class PageController extends ContactController {
 	 * adds a group to the list of groups the user is forced to be a member of
 	 * 
 	 * @param string $group_id
-	 * @NoAdminRequired
 	 */
 	public function addForcedGroupMembership( $group_id ) {
 		// get the current forced groups
@@ -834,7 +833,6 @@ Class PageController extends ContactController {
 	 * removes a group from the list of groups the user is forced to be a member of
 	 * 
 	 * @param string $group_id
-	 * @NoAdminRequired
 	 */
 	public function removeForcedGroupMembership( $group_id ) {
 		// get the current forced groups
@@ -859,5 +857,35 @@ Class PageController extends ContactController {
 	 */
 	public function adminLoadGroups() {
 		return new DataResponse( $this->get_groups( $this->group_filter ) );
+	}
+	
+	/**
+	 * apply forced group memberships to all users
+	 * 
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	public function applyForcedGroupMemberships() {
+		// get all users
+		$users = $this->get_users( $this->user_filter );
+		// get all forced groups
+		$forced_groups = $this->getForcedGroupMemberships();
+		
+		// add every user to every forced group
+		$error = 0;
+		foreach( $forced_groups as $group_id ) {
+			foreach( $users as $user ) {
+				$error |= !$this->addUserHelper( $user['mail'], $group_id );
+			}
+		}
+		
+		if( $error ) {
+			// something went wrong
+			return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Applying forced group memberships failed' ) ), 'status' => 'error' ) );
+		}
+		else {
+			// everything went fine
+			return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Applied forced group memberships' ) ), 'status' => 'success' ) );
+		}
 	}
 }

@@ -324,6 +324,15 @@ $(document).ready(function () {
 				$('#ldaporg-search-non-forced-memberships-group').val('');
 				$('#ldaporg-search-non-forced-memberships-group').trigger( 'change' );
 			});
+			
+			// apply forced group memberships
+			$( '#ldaporg-apply-forced-group-membership' ).click( function() {
+				OC.msg.startSaving( '#ldaporg-force-group-membership-msg' );
+				// send request
+				$.get( self._baseUrl + '/apply/forcedMemberships', function(data) {
+					OC.msg.finishedSaving( '#ldaporg-force-group-membership-msg', data );
+				});
+			});
 		},
 		// force the membership of a group
 		forceGroupMembership: function(group) {
