@@ -32,7 +32,7 @@
 	#tutorial-container[tutorial-id="0"] {
 		top: -3px;
 		left: 100%;
-		margin-left: -9px;
+		margin-left: -32px;
 	}
 	
 	#tutorial-container[tutorial-id="0"]:after, #tutorial-container[tutorial-id="0"]:before {
@@ -53,7 +53,7 @@
 	#tutorial-container[tutorial-id="1"] {
 		top: 48px;
 		left: 100%;
-		margin-left: -10px;
+		margin-left: -55px;
 	}
 	
 	#tutorial-container[tutorial-id="1"]:after, #tutorial-container[tutorial-id="1"]:before {
@@ -74,7 +74,7 @@
 	#tutorial-container[tutorial-id="2"] {
 		top: 96px;
 		left: 100%;
-		margin-left: -52px;
+		margin-left: -70px;
 	}
 	
 	#tutorial-container[tutorial-id="2"]:after, #tutorial-container[tutorial-id="2"]:before {

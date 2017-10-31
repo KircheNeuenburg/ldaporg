@@ -143,14 +143,16 @@ Groups.prototype = {
 			if( !superuser ) {
 				$( '#navigation-header' ).remove();
 				
-				// remove the superuser attribute to every group
+				// remove the superuser attribute from every group
 				$.each( self._groups, function( key, value ) {
 					self._groups[ key ]['superuser'] = false;
 				});
 				self._superuser = false;
 				
 				deferred.resolve();
+				return;
 			}
+			
 			// add the superuser attribute to every group
 			$.each( self._groups, function( key, value ) {
 				self._groups[ key ]['superuser'] = true;
@@ -595,7 +597,7 @@ var Tutorial = function () {
 	this._state = 0;
 	this._max_state = 5;
 	this._parents = [
-		"#navigation-header",
+		"#group-navigation > ul",
 		"#group-navigation > ul",
 		"#group-navigation > ul",
 		"#info > .content-nav",
@@ -632,39 +634,43 @@ Tutorial.prototype = {
 	},
 	// execute a custom 
 	doCustomAction: function() {
-		switch( this._state ) {
-			case "0":
-				if( $( document ).width() < 769 && groups._superuser )
-					$( '#app-content' ).css( 'transform', 'translate3d(250px, 0px, 0px)' );
-				return !groups._superuser;
-				break;
-			case "1":
-				if( $( document ).width() < 769 )
-					$( '#app-content' ).css( 'transform', 'translate3d(250px, 0px, 0px)' );
-				break;
-			case "2":
-				if( $( document ).width() < 769 && groups._superuser )
-					$( '#app-content' ).css( 'transform', 'translate3d(250px, 0px, 0px)' );
-				return !groups._superuser;
-				break;
-			case "3":
-				if( $( document ).width() < 769 )
-					$( '#app-content' ).css( 'transform', 'translate3d(0px, 0px, 0px)' );
-				if( typeof( groups._activeGroup ) == 'undefined' || groups._activeGroup == null )
-					return groups.load( $( '#group-navigation > ul > li:first-child' ).attr( 'data-id' ) );
-				break;
-			case "4":
-				if( $( document ).width() < 769 )
-					$( '#app-content' ).css( 'transform', 'translate3d(0px, 0px, 0px)' );
-				if( typeof( groups._activeGroup ) == 'undefined' || groups._activeGroup == null )
-					return groups.load( $( '#group-navigation > ul > li:first-child' ).attr( 'data-id' ) );
-				break;
-			case "5":
-				if( $( document ).width() < 769 )
-					$( '#app-content' ).css( 'transform', 'translate3d(0px, 0px, 0px)' );
-				if( typeof( groups._activeGroup ) == 'undefined' || groups._activeGroup == null )
-					return groups.load( $( '#group-navigation > ul > li:first-child' ).attr( 'data-id' ) );
-				break;
+		if( this._state == 0 || this._state == "0" )
+		{
+			if( $( document ).width() < 769 && groups._superuser )
+				$( '#app-content' ).css( 'transform', 'translate3d(250px, 0px, 0px)' );
+			return !groups._superuser;
+		}
+		else if( this._state == 1 || this._state == "1" )
+		{
+			if( $( document ).width() < 769 )
+				$( '#app-content' ).css( 'transform', 'translate3d(250px, 0px, 0px)' );
+		}
+		else if( this._state == 2 || this._state == "2" )
+		{
+			if( $( document ).width() < 769 && groups._superuser )
+				$( '#app-content' ).css( 'transform', 'translate3d(250px, 0px, 0px)' );
+			return !groups._superuser;
+		}
+		else if( this._state == 3 || this._state == "3" )
+		{
+			if( $( document ).width() < 769 )
+				$( '#app-content' ).css( 'transform', 'translate3d(0px, 0px, 0px)' );
+			if( typeof( groups._activeGroup ) == 'undefined' || groups._activeGroup == null )
+				return groups.load( $( '#group-navigation > ul > li:first-child' ).attr( 'data-id' ) );
+		}
+		else if( this._state == 4 || this._state == "4" )
+		{
+			if( $( document ).width() < 769 )
+				$( '#app-content' ).css( 'transform', 'translate3d(0px, 0px, 0px)' );
+			if( typeof( groups._activeGroup ) == 'undefined' || groups._activeGroup == null )
+				return groups.load( $( '#group-navigation > ul > li:first-child' ).attr( 'data-id' ) );
+		}
+		else if( this._state == 5 || this._state == "5" )
+		{
+			if( $( document ).width() < 769 )
+				$( '#app-content' ).css( 'transform', 'translate3d(0px, 0px, 0px)' );
+			if( typeof( groups._activeGroup ) == 'undefined' || groups._activeGroup == null )
+				return groups.load( $( '#group-navigation > ul > li:first-child' ).attr( 'data-id' ) );
 		}
 	},
 	// show the next tutorial step and hide the current one
@@ -703,10 +709,13 @@ Tutorial.prototype = {
 		}
 		// check if the custom action wants to go to the next tutorial
 		else if( action_result ) {
+			// increase state count
+			this._state++;
 			this.next();
 		}
 		// keep going normally
 		else {
+			
 			// render new tutorial
 			var source = $( '#tutorial-tpl' ).html();
 			var template = Handlebars.compile( source );
@@ -717,7 +726,6 @@ Tutorial.prototype = {
 			
 			// increase state count
 			this._state++;
-			
 			// add action for going to the next tutorial
 			$( '#tutorial-next' ).one( 'click', function() {
 				self.next();
@@ -740,9 +748,6 @@ Tutorial.prototype = {
 	},
 };
 
-
-
-
 var tutorial = new Tutorial();
 
 var groups = new Groups();
@@ -758,8 +763,6 @@ groups.loadAll().done( function() {
 		});
 	});
 });
-
-
 });
 
 })(OC, window, jQuery);
