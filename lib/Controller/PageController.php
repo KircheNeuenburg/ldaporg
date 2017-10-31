@@ -853,4 +853,11 @@ Class PageController extends ContactController {
 			return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Removing the group failed' ) ), 'status' => 'error' ) );
 		}
 	}
+	
+	/**
+	 * load all groups
+	 */
+	public function adminLoadGroups() {
+		return new DataResponse( $this->get_groups( $this->group_filter ) );
+	}
 }

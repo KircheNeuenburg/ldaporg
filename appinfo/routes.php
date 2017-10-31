@@ -22,6 +22,7 @@ return [
 	'routes' => [
 		[ 'name' => 'Page#index', 'url' => '/', 'verb' => 'GET' ],
 		[ 'name' => 'Page#loadGroups', 'url' => '/load', 'verb' => 'GET' ],
+		[ 'name' => 'Page#adminLoadGroups', 'url' => '/admin/load', 'verb' => 'GET' ],
 		[ 'name' => 'Page#loadUsers', 'url' => '/load/users', 'verb' => 'GET' ],
 		[ 'name' => 'Page#addUser', 'url' => '/add/group/user', 'verb' => 'POST' ],
 		[ 'name' => 'Page#removeUser', 'url' => '/remove/group/user', 'verb' => 'POST' ],

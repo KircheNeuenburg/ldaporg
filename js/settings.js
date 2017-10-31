@@ -87,7 +87,6 @@ $(document).ready(function () {
 					contentType: 'application/json',
 					data: JSON.stringify( data )
 				}).done( function( data ) {
-					console.log( data );
 					// show message
 					OC.msg.finishedSaving( '#ldaporg-user-content .msg', data );
 				});
@@ -266,7 +265,6 @@ $(document).ready(function () {
 			var deferred = $.Deferred();
 			
 			$.get( this._baseUrl + '/load/group/forcedMembership' ).done( function( data ) {
-				console.log( data );
 				if( data.status == 'success' ) {
 					// reset variables
 					self._forcedGroupMemberships = data.data;
@@ -329,12 +327,10 @@ $(document).ready(function () {
 		},
 		// force the membership of a group
 		forceGroupMembership: function(group) {
-			console.log( 'force' );
 			var self = this;
 			OC.msg.startSaving( '#ldaporg-force-group-membership-msg' );
 			// send request
 			$.get( this._baseUrl + '/add/group/forcedMembership/' + encodeURI(group.id), function(data) {
-				console.log( data );
 				// reload all data
 				self.loadForcedGroupMemberships().done( function() {
 					self.renderForcedGroupMemberships();
@@ -344,7 +340,6 @@ $(document).ready(function () {
 		},
 		// make a certain group membership optional again
 		unforceGroupMembership: function (group_id ) {
-			console.log( 'unforce' );
 			var self = this;
 			OC.msg.startSaving( '#ldaporg-force-group-membership-msg' );
 			// send request
@@ -417,7 +412,7 @@ $(document).ready(function () {
 			var deferred = $.Deferred();
 			var self = this;
 			// load the groups
-			$.get( this._baseUrl + '/load', function(data) {
+			$.get( this._baseUrl + '/admin/load', function(data) {
 				self._groups = data;
 				deferred.resolve();
 			}).fail( function() {
