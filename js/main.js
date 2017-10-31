@@ -69,16 +69,39 @@ Groups.prototype = {
 			self.loadUsers().done( function() {
 				// load current user
 				self.loadOwn().done( function() {
-					deferred.resolve();
+					// load forced group memberships
+					self.loadForcedGroupMemberships().done( function() {
+						deferred.resolve();
+					}).fail(function () {
+					deferred.reject();
+				});
 				}).fail(function () {
 					deferred.reject();
-				});;
+				});
 			}).fail(function () {
 				deferred.reject();
-			});;
+			});
 		}).fail(function () {
             deferred.reject();
-        });;
+        });
+		return deferred.promise();
+	},
+	loadForcedGroupMemberships: function() {
+		var self = this;
+		var deferred = $.Deferred();
+
+		$.get( this._baseUrl + '/load/group/forcedMembership' ).done( function( data ) {
+			if( data.status == 'success' ) {
+				// reset variables
+				self._forcedGroupMemberships = data.data;
+				deferred.resolve();
+			}
+			else {
+				deferred.reject();
+			}
+		}).fail( function() {
+			deferred.reject();
+		});
 		return deferred.promise();
 	},
 	// load a groups data and render it in the content area if needed
@@ -288,7 +311,7 @@ Groups.prototype = {
         }).done( function( canedit ) {
 			var source = $( '#content-tpl' ).html();
 			var template = Handlebars.compile( source );
-			var html = undefined;
+			var html_option = { group: self._activeGroup, notForcedMembership: true };
 			
 			// check if a group has been selected
 			if( typeof( self._activeGroup ) != 'undefined' && self._activeGroup != null ) {
@@ -298,14 +321,21 @@ Groups.prototype = {
 			
 				// check if the current user is in the group
 				$.each( self._me.groups, function( index, group ) {
-					if( group.id == self._activeGroup.id ) html = template( { group: self._activeGroup, me: true } );
+					if( group.id == self._activeGroup.id ) html_option.me = true;
+				});
+				
+				// check if the current group has forced membership
+				$.each( self._forcedGroupMemberships, function( key, id ) {
+					// check if this is the active group
+					if( self._activeGroup.id == id ) {
+						html_option.notForcedMembership = false;
+						return false;
+					}
 				});
 			}
-			
-			// if the current user is not a member of this group, use alternative template render
-			if( typeof( html ) == 'undefined' || html == null ) html = template( { group: self._activeGroup } );
+
 			// render content
-			$( '#info' ).html( html );
+			$( '#info' ).html( template( html_option ) );
 			$( '#info' ).focus();
 			
 			$( '#group_add_member' ).on( "change keyup paste", function() {

@@ -440,6 +440,11 @@ Class PageController extends ContactController {
 		// check if the user is allowed to edit this group or wants to remove himself
 		if( $user['mail'] != $this->mail && !$this->userCanEdit( $group['id'] ) )return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Permission denied' ) ), 'status' => 'error' ) );
 		
+		// the user can't be removed, if this is a forced group
+		if( $this->isForcedGroup( $group['id'] ) ) {
+			return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Removing users from this group is not possible' ) ), 'status' => 'error' ) );
+		}
+		
 		// let the helper function handle the actual work
 		$return = $this->removeUserHelper( $user['mail'], $group['id'] );
 		
@@ -887,5 +892,15 @@ Class PageController extends ContactController {
 			// everything went fine
 			return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Applied forced group memberships' ) ), 'status' => 'success' ) );
 		}
+	}
+	
+	/**
+	 * checks if the given group has forced membership
+	 * 
+	 * @param int $group_id		the id of the group to be tested
+	 */
+	protected function isForcedGroup( $group_id ) {
+		$forced_groups = $this->getForcedGroupMemberships();
+		return array_search( $group_id, $forced_groups ) !== false;
 	}
 }

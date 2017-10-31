@@ -92,6 +92,7 @@ OC.L10N.register(
 	"Select" : "Auswählen",
 	"Apply forced group memberships to all users" : "Verpflichtende Gruppenmitgliedschaften auf alle Benutzer anwenden",
 	"Applied forced group memberships" : "Verpflichtende Gruppenmitgliedschaften erfolgreich angewendet",
-	"Applying forced group memberships failed" : "Verpflichtende Gruppenmitgliedschaften anwenden war nicht erfolgreich"
+	"Applying forced group memberships failed" : "Verpflichtende Gruppenmitgliedschaften anwenden war nicht erfolgreich",
+	"Removing users from this group is not possible" : "Benutzer von dieser Gruppe zu entfernen ist nicht erlaubt"
 },
 "nplurals=2; plural=(n != 1);");
