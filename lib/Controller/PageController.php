@@ -525,12 +525,12 @@ Class PageController extends ContactController {
 		if( empty( $group_name ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( "Group name can't be empty" ) ), 'status' => 'error' ) );
 		
 		// check if there is already a group with the same name
-		$request = ldap_search( $this->connection, $this->group_dn, '(&' . $this->ldap_group_filter . '(cn=' . $group_name . '))' );
+		$request = ldap_search( $this->connection, $this->group_dn, '(&' . $this->group_filter . '(cn=' . $group_name . '))' );
 		$result = ldap_get_entries( $this->connection, $request );
 		if( $result['count'] != 0 ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'A group with the same name already exists' ) ), 'status' => 'error' ) );
 		
 		// get the highest current gidNumber
-		$request = ldap_search( $this->connection, $this->group_dn, '(&' . $this->ldap_group_filter . '(gidnumber=*))', array( 'gidnumber' ) );
+		$request = ldap_search( $this->connection, $this->group_dn, '(&' . $this->group_filter . '(gidnumber=*))', array( 'gidnumber' ) );
 		$result = ldap_get_entries( $this->connection, $request );
 		
 		// if there isn't a gidnumber given yet, start counting at 500
@@ -726,7 +726,13 @@ Class PageController extends ContactController {
             $this->sendWelcomeMail( $user );
 
 			// add the user to the default group
-			$this->addUser( $user, array( 'id' => $this->settings->getSetting( 'user_gidnumber' ) ) );
+			$this->addUserHelper( $user['mail'], $this->settings->getSetting( 'user_gidnumber') );
+			
+			// add the user to all forced membership groups
+			$forced_groups = $this->getForcedGroupMemberships();
+			foreach( $forced_groups as $group_id ) {
+				$this->addUserHelper( $user['mail'], $group_id );
+			}
 		}
 		
 		// check if the request was a success or not
