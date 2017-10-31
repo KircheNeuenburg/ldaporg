@@ -5,7 +5,7 @@
 	<description>Lets you easily create and edit your LDAP users and groups.</description>
 	<licence>AGPL</licence>
     <author>Alexander Hornig</author>
-    <version>1</version>
+    <version>1.0</version>
 	<types>
 		<tool/>
 	</types>
