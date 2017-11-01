@@ -337,6 +337,9 @@ Groups.prototype = {
 				
 				// get number of members
 				html_option.memberCount = self._activeGroup.members.length;
+				
+				// add export member details url
+				html_option.exportURL = self._baseUrl + '/export/' + self._activeGroup.id;
 			}
 
 			// render content

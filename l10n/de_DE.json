@@ -92,6 +92,17 @@
 	"Apply forced group memberships to all users" : "Verpflichtende Gruppenmitgliedschaften auf alle Benutzer anwenden",
 	"Applied forced group memberships" : "Verpflichtende Gruppenmitgliedschaften erfolgreich angewendet",
 	"Applying forced group memberships failed" : "Verpflichtende Gruppenmitgliedschaften anwenden war nicht erfolgreich",
-	"Removing users from this group is not possible" : "Benutzer von dieser Gruppe zu entfernen ist nicht erlaubt"
+	"Removing users from this group is not possible" : "Benutzer von dieser Gruppe zu entfernen ist nicht erlaubt",
+	"Export group member details" : "Details der Gruppenmitglieder exportieren",
+	"Mail" : "Mail Adresse",
+	"First Name" : "Vorname",
+	"Last Name" : "Nachname",
+	"Street" : "Straße",
+	"House number" : "Hausnummer",
+	"zip Code" : "PLZ",
+	"City" : "Stadt",
+	"Phone" : "Telefon",
+	"Mobile" : "Handy",
+	"About me" : "Über mich"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

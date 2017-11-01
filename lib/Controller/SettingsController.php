@@ -55,6 +55,8 @@ Class SettingsController extends Controller {
 			'welcome_mail_from_name' => 'Nextcloud',
 			'welcome_mail_message' => $this->l->t( 'Welcome to Nextcloud! We hope you enjoy your time here.' ),
 			'forced_group_memberships' => '',
+			'contacts_available_data' => array( 'mail' => $this->l->t( 'Mail' ), 'givenname' => $this->l->t( 'First Name' ), 'sn' => $this->l->t( 'Last Name' ), 'street' => $this->l->t( 'Street' ), 'postaladdress' => $this->l->t( 'House number' ), 'postalcode' => $this->l->t( 'zip Code' ), 'l' => $this->l->t( 'City' ), 'homephone' => $this->l->t( 'Phone' ), 'mobile' => $this->l->t( 'Mobile' ), 'description' => $this->l->t( 'About me' ) ),
+			'csv_seperator' => ';',
 		);
 		$this->user_default = array(
 			'tutorial_state' => 0,

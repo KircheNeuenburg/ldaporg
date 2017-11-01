@@ -54,6 +54,8 @@ style( 'ldaporg', 'fa-4.7.0/css/font-awesome.min' );
 					{{#if me}}{{#if notForcedMembership }}<a href="#" id="leave_group" class="leave"><?php p($l->t('End Group Membership')); ?></a>{{/if}}{{/if}}
 				</div>
 				
+				{{#if exportURL}}<div><a class="button" target="_blank" href="{{ exportURL }}"><?php p($l->t( 'Export group member details' )); ?> <span class="icon icon-external"></span></a></div>{{/if}}
+				
 				<div class="msg-container"><span class="msg"></span></div>
 				
 				

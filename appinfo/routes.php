@@ -44,5 +44,6 @@ return [
 		[ 'name' => 'Page#addForcedGroupMembership', 'url' => '/add/group/forcedMembership/{group_id}', 'verb' => 'GET' ],
 		[ 'name' => 'Page#removeForcedGroupMembership', 'url' => '/remove/group/forcedMembership/{group_id}', 'verb' => 'GET' ],
 		[ 'name' => 'Page#applyForcedGroupMemberships', 'url' => '/apply/forcedMemberships', 'verb' => 'GET' ],
+		[ 'name' => 'Page#exportGroupMemberDetails', 'url' => '/export/{group_id}', 'verb' => 'GET' ],
 	]
 ];

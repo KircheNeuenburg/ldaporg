@@ -88,7 +88,7 @@ Class PageController extends ContactController {
 		// get the users attribute used to associate with the groups
 		$assoc_attr = $this->get_group_assoc_attribute( $this->mail );
 		
-		// check if the user is in the group that can do edit anything
+		// check if the user is in the group that can edit anything
 		$request = ldap_list( $this->connection, $this->group_dn, '(&' . str_replace( '%gid', $this->settings->getSetting( 'superuser_group_id' ), $this->group_filter_specific ) . '(' . $this->group_member_assoc_attr . '=' . $assoc_attr . '))' );
 		$result = ldap_get_entries( $this->connection, $request );
 		
@@ -908,5 +908,61 @@ Class PageController extends ContactController {
 	protected function isForcedGroup( $group_id ) {
 		$forced_groups = $this->getForcedGroupMemberships();
 		return array_search( $group_id, $forced_groups ) !== false;
+	}
+	
+	/**
+	 * exports the details for all members of the given group
+	 * 
+	 * @param int $group_id			the id of the group the data should be exported from
+	 * 
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	public function exportGroupMemberDetails( $group_id ) {
+		// get all groups the user has access to
+		$groups = $this->loadGroups()->getData();
+		$given_group = false;
+		// check if the given group is there
+		foreach( $groups as $group ) {
+			if( $group['id'] == $group_id ) {
+				$given_group = $group;
+				break;
+			}
+		}
+		
+		// get all available data
+		$data = $this->settings->getSetting( 'contacts_available_data' );
+		// create file buffer
+		$file_content = [];
+		
+		// add header line
+		$line = [];
+		foreach( $data as $key => $label ) {
+			array_push( $line, $label );
+		}
+		array_push( $file_content, $line );
+		
+		// add a line for every member
+		foreach( $given_group['members'] as $member ) {
+			$line = [];
+			foreach( $data as $key => $label ) {
+				array_push( $line, $member[ $key ] );
+			}
+			array_push( $file_content, $line );
+		}
+		
+		// write file header
+		header("Content-type: text/csv");
+		header("Content-Disposition: attachment; filename=" . $given_group['cn'] . ".csv");
+		header("Pragma: no-cache");
+		header("Expires: 0");
+		
+		// output the file
+		$file = fopen("php://output", 'w');
+		// write each line
+		foreach( $file_content as $line ) {
+			fputcsv( $file, $line, $this->settings->getSetting( 'csv_seperator' ) );
+		}
+		exit;
 	}
 }
