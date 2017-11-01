@@ -334,6 +334,9 @@ Groups.prototype = {
 						return false;
 					}
 				});
+				
+				// get number of members
+				html_option.memberCount = self._activeGroup.members.length;
 			}
 
 			// render content

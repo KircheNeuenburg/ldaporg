@@ -57,7 +57,7 @@ style( 'ldaporg', 'fa-4.7.0/css/font-awesome.min' );
 				<div class="msg-container"><span class="msg"></span></div>
 				
 				
-				<h3><?php p($l->t( 'Members' )); ?></h3>
+				<h3><?php p($l->t( 'Members' )); ?>{{#if memberCount}} ({{ memberCount }}){{/if}}</h3>
 					{{#if group.members}}
 						<table>
 							<tbody>
