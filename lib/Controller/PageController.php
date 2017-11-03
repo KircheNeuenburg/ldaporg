@@ -19,6 +19,7 @@ use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Controller;
 use OCA\LdapOrg\Controller\SettingsController;
+use OCA\LdapContacts\Controller\SettingsController as ContactsSettingsController;
 use OCA\LdapContacts\Controller\ContactController;
 
 Class PageController extends ContactController {
@@ -30,11 +31,14 @@ Class PageController extends ContactController {
 	/**
 	 * @param string $AppName
 	 * @param IRequest $request
-	 * @param IConfig
-	 * @param SettingsController	
+	 * @param IConfig $config
+	 * @param SettingsController $settings
+	 * @param ContactsSettingsController $contacts_settings
+     * @param IMailer $mailer
+     * @param mixed $UserId
 	 */
-	public function __construct( $AppName, IRequest $request, IConfig $config, SettingsController $settings, IMailer $mailer, Il10n $l10n, $UserId ) {
-		parent::__construct( $AppName, $request, $config, $UserId );
+	public function __construct( $AppName, IRequest $request, IConfig $config, SettingsController $settings, ContactsSettingsController $contacts_settings, IMailer $mailer, Il10n $l10n, $UserId ) {
+		parent::__construct( $AppName, $request, $config, $contacts_settings, $UserId );
 		// translation
 		$this->l2 = $l10n;
 		// save the settings controller
@@ -93,7 +97,7 @@ Class PageController extends ContactController {
 		$result = ldap_get_entries( $this->connection, $request );
 		
 		// if the user is a super user, get all groups
-		if( $result['count'] != 0 )
+		if( $result['count'] !== 0 )
 			$groups = $this->get_groups( $this->group_filter );
 		// otherwise only get the groups the user is a member of
 		else
@@ -111,12 +115,12 @@ Class PageController extends ContactController {
 				foreach( $users as $user ) {
 					// check every group if it is this group
 					array_walk( $user['groups'], function( $value, $k ) use ( $group, $user, &$members, $admins ) {
-						if( $value['id'] == $group['id'] ) {
+						if( $value['id'] === $group['id'] ) {
 							
 							// check if this is one of the admins
 							array_walk( $admins, function( $value, $key ) use ( &$user ) {
 								// if the user was found in the groups admins, add his info and end the search
-								if( $value == $user['uid'] ) {
+								if( $value === $user['uid'] ) {
 									$user['isadmin'] = true;
 									return;
 								}
@@ -214,7 +218,7 @@ Class PageController extends ContactController {
 		$request = ldap_search( $this->connection, $this->group_dn, str_replace( '%gid', $group_id, $this->group_filter_specific ), array( $this->group_admin_attribute ) );
 		$result = ldap_get_entries( $this->connection, $request );
 		// check if the group was found
-		if( $result['count'] != 1 ) return false;
+		if( $result['count'] !== 1 ) return false;
 		$group = $result[0];
 		
 		// if there were no admins yet, create a new entry
@@ -228,7 +232,7 @@ Class PageController extends ContactController {
 		// check if the user is already an admin in this group
 		foreach( $group[ $this->group_admin_attribute ] as $key => $user ) {
 			// if the user is already an admin in this group, we don't have to add him again
-			if( $user == $uname ) return true;
+			if( $user === $uname ) return true;
 		}
 		
 		// add the given user to the admins of this group
@@ -270,7 +274,7 @@ Class PageController extends ContactController {
 		$request = ldap_search( $this->connection, $this->group_dn, str_replace( '%gid', $group_id, $this->group_filter_specific ), array( $this->group_admin_attribute ) );
 		$result = ldap_get_entries( $this->connection, $request );
 		// check if the group was found
-		if( $result['count'] != 1 ) return false;
+		if( $result['count'] !== 1 ) return false;
 		$group = $result[0];
 		
 		// if there are no admins, we are done
@@ -283,7 +287,7 @@ Class PageController extends ContactController {
 		$removed = false;
 		foreach( $group[ $this->group_admin_attribute ] as $key => $user ) {
 			// if the user was found, remove him and end the search
-			if( $user == $uname ) {
+			if( $user === $uname ) {
 				$removed = true;
 				unset( $group[ $this->group_admin_attribute ][ $key ] );
 				break;
@@ -309,7 +313,7 @@ Class PageController extends ContactController {
 		$request = ldap_search( $this->connection, $this->group_dn, str_replace( '%gid', $group_id, $this->group_filter_specific ), array( 'objectclass' ) );
 		$result = ldap_get_entries( $this->connection, $request );
 		// check if the group was found
-		if( $result['count'] != 1 ) return false;
+		if( $result['count'] !== 1 ) return false;
 		$group = $result[0];
 		
 		// buffer for data that has to be replaced
@@ -318,7 +322,7 @@ Class PageController extends ContactController {
 		// go through all objectClasses and check if the orgGroup is set
 		$given = false;
 		foreach( $group['objectclass'] as $class ) {
-			if( $class == 'x-kircheneuenburg-orgGroup' ) {
+			if( $class === 'x-kircheneuenburg-orgGroup' ) {
 				$given = true;
 				break;
 			}
@@ -362,14 +366,14 @@ Class PageController extends ContactController {
 		$request = ldap_list( $this->connection, $this->group_dn, '(&' . str_replace( '%gid', $this->settings->getSetting( 'superuser_group_id' ), $this->group_filter_specific ) . '(' . $this->group_member_assoc_attr . '=' . $this->get_group_assoc_attribute( $user_id ) . '))' );
 		$result = ldap_get_entries( $this->connection, $request );
 		// if the user is a superuser, he can edit
-		if( $result['count'] != 0 ) return true;
+		if( $result['count'] !== 0 ) return true;
 		
 		// check if the user is a group admin
 		$request = ldap_search( $this->connection, $this->group_dn, '(&' . str_replace( '%gid', $group_id, $this->group_filter_specific ) . str_replace( '%uid', $this->get_group_assoc_attribute( $user_id ), $this->group_admin_filter ) . ')' );
 		$result = ldap_get_entries( $this->connection, $request );
 		
 		// if the user is an admin of this group, he can edit
-		if( $result['count'] != 0 ) return true;
+		if( $result['count'] !== 0 ) return true;
 		return false;
 	}
 	
@@ -405,7 +409,7 @@ Class PageController extends ContactController {
 		$request = ldap_search( $this->connection, $this->group_dn, str_replace( '%gid', $group_id, $this->group_filter_specific ), array( 'memberuid' ) );
 		$result = ldap_get_entries( $this->connection, $request );
 		// check if the group was found
-		if( $result['count'] != 1 ) return false;
+		if( $result['count'] !== 1 ) return false;
 		$group = $result[0];
 		
 		// if there were no members yet, create a new entry
@@ -419,7 +423,7 @@ Class PageController extends ContactController {
 		// check if the user is already a member of this group
 		foreach( $group['memberuid'] as $user ) {
 			// if the user is already a member of this group, we don't have to add him again
-			if( $user == $uname ) return true;
+			if( $user === $uname ) return true;
 		}
 		
 		// add the given user as a member of this group
@@ -438,7 +442,7 @@ Class PageController extends ContactController {
 	 */
 	public function removeUser( $user, $group ) {
 		// check if the user is allowed to edit this group or wants to remove himself
-		if( $user['mail'] != $this->mail && !$this->userCanEdit( $group['id'] ) )return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Permission denied' ) ), 'status' => 'error' ) );
+		if( $user['mail'] !== $this->mail && !$this->userCanEdit( $group['id'] ) )return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Permission denied' ) ), 'status' => 'error' ) );
 		
 		// the user can't be removed, if this is a forced group
 		if( $this->isForcedGroup( $group['id'] ) ) {
@@ -449,7 +453,7 @@ Class PageController extends ContactController {
 		$return = $this->removeUserHelper( $user['mail'], $group['id'] );
 		
 		// check which type of message should be shown
-		if( $user['mail'] == $this->mail ) {
+		if( $user['mail'] === $this->mail ) {
 			// check if the request was a success or not
 			if( $return ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'You are not a member of the group anymore' ) ), 'status' => 'success' ) );
 			else return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Leaving the group failed' ) ), 'status' => 'error' ) );
@@ -477,7 +481,7 @@ Class PageController extends ContactController {
 		$request = ldap_search( $this->connection, $this->group_dn, str_replace( '%gid', $group_id, $this->group_filter_specific ), array( 'memberuid' ) );
 		$result = ldap_get_entries( $this->connection, $request );
 		// check if the group was found
-		if( $result['count'] != 1 ) return false;
+		if( $result['count'] !== 1 ) return false;
 		$group = $result[0];
 		
 		// if the group has no members, we are done here
@@ -489,7 +493,7 @@ Class PageController extends ContactController {
 		// go through all group members and try to find the given user
 		foreach( $group['memberuid'] as $key => $user ) {
 			// if the user was found, remove him and end the search
-			if( $user == $uname ) {
+			if( $user === $uname ) {
 				unset( $group['memberuid'][ $key ] );
 				break;
 			}
@@ -527,7 +531,7 @@ Class PageController extends ContactController {
 		// check if there is already a group with the same name
 		$request = ldap_search( $this->connection, $this->group_dn, '(&' . $this->group_filter . '(cn=' . $group_name . '))' );
 		$result = ldap_get_entries( $this->connection, $request );
-		if( $result['count'] != 0 ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'A group with the same name already exists' ) ), 'status' => 'error' ) );
+		if( $result['count'] !== 0 ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'A group with the same name already exists' ) ), 'status' => 'error' ) );
 		
 		// get the highest current gidNumber
 		$request = ldap_search( $this->connection, $this->group_dn, '(&' . $this->group_filter . '(gidnumber=*))', array( 'gidnumber' ) );
@@ -567,14 +571,14 @@ Class PageController extends ContactController {
 		if( !$this->userCanEdit( $this->settings->getSetting( 'superuser_group_id' ) ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Permission denied' ) ), 'status' => 'error' ) );
 		
 		// the superuser group can't be deleted
-		if( $group['id'] == $this->settings->getSetting( 'superuser_group_id' ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( "The superuser group can't be deleted" ) ), 'status' => 'error' ) );
+		if( $group['id'] === $this->settings->getSetting( 'superuser_group_id' ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( "The superuser group can't be deleted" ) ), 'status' => 'error' ) );
 		
 		// get the groups dn
 		$request = ldap_search( $this->connection, $this->group_dn, str_replace( '%gid', $group['id'], $this->group_filter_specific ), array( 'dn' ) );
 		$result = ldap_get_entries( $this->connection, $request );
 		
 		// check if the group was found
-		if( $result['count'] != 1 || !isset( $result[0]['dn'] ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Removing the group failed' ) ), 'status' => 'error' ) );
+		if( $result['count'] !== 1 || !isset( $result[0]['dn'] ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Removing the group failed' ) ), 'status' => 'error' ) );
 		
 		// remove the group from the server
 		$request = ldap_delete( $this->connection, $result[0]['dn'] );
@@ -607,7 +611,7 @@ Class PageController extends ContactController {
 		$request = ldap_search( $this->connection, $this->base_dn, str_replace( '%uid', $user_id, $this->user_filter_specific ) );
 		$result = ldap_get_entries( $this->connection, $request );
 		// check if the user was found
-		if( $result['count'] != 1 || !isset( $result[0]['dn'] ) ) return false;
+		if( $result['count'] !== 1 || !isset( $result[0]['dn'] ) ) return false;
 		
 		// get all existing groups
 		if( !$groups = $this->get_groups( $this->group_filter ) ) return false;
@@ -641,7 +645,7 @@ Class PageController extends ContactController {
 		$request = ldap_search( $this->connection, $this->base_dn, '(&' . $this->user_filter . '(mail=' . $mail . '))', array( 'mail' ) );
 		$result = ldap_get_entries( $this->connection, $request );
 		// there can't be two users with the same email adress
-		if( $result['count'] != 0 ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Another user with the same email adress already exists' ) ), 'status' => 'error' ) );
+		if( $result['count'] !== 0 ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Another user with the same email adress already exists' ) ), 'status' => 'error' ) );
 		
 		/** generate all the users data **/
 			$user = array();
@@ -662,7 +666,7 @@ Class PageController extends ContactController {
 				$request = ldap_search( $this->connection, $this->base_dn, '(&' . $this->user_filter . '(cn=' . $user['cn'] . '))', array( 'cn' ) );
 				$result = ldap_get_entries( $this->connection, $request );
 				// if there is another user with the same cn, add an increasing number at the end of the cn
-				while( $result['count'] != 0 ) {
+				while( $result['count'] !== 0 ) {
 					$user['cn'] = $cn_orig . $i++;
 					// check if there is still someone with the same cn
 					$request = ldap_search( $this->connection, $this->base_dn, '(&' . $this->user_filter . '(cn=' . $user['cn'] . '))', array( 'cn' ) );
@@ -680,7 +684,7 @@ Class PageController extends ContactController {
 				$request = ldap_search( $this->connection, $this->base_dn, '(&' . $this->user_filter . '(uid=' . $user['uid'] . '))', array( 'uid' ) );
 				$result = ldap_get_entries( $this->connection, $request );
 				// if there is another user with the same uid, add an increasing number at the end of the uid
-				while( $result['count'] != 0 ) {
+				while( $result['count'] !== 0 ) {
 					$user['uid'] = $uid_orig . $i++;
 					// check if there is still someone with the same uid
 					$request = ldap_search( $this->connection, $this->base_dn, '(&' . $this->user_filter . '(uid=' . $user['uid'] . '))', array( 'uid' ) );
@@ -919,17 +923,17 @@ Class PageController extends ContactController {
 	 * @NoCSRFRequired
 	 */
 	public function exportGroupMemberDetails( $group_id ) {
+        $group_id = (string) $group_id;
 		// get all groups the user has access to
 		$groups = $this->loadGroups()->getData();
 		$given_group = false;
 		// check if the given group is there
 		foreach( $groups as $group ) {
-			if( $group['id'] == $group_id ) {
+			if( $group['id'] === (string) $group_id ) {
 				$given_group = $group;
 				break;
 			}
 		}
-		
 		// get all available data
 		$data = $this->settings->getSetting( 'contacts_available_data' );
 		// create file buffer
@@ -946,7 +950,7 @@ Class PageController extends ContactController {
 		foreach( $given_group['members'] as $member ) {
 			$line = [];
 			foreach( $data as $key => $label ) {
-				array_push( $line, $member[ $key ] );
+				array_push( $line, @$member[ $key ] );
 			}
 			array_push( $file_content, $line );
 		}

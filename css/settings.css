@@ -62,6 +62,14 @@
 #ldaporg-edit-settings tr:not(.pwd_reset_url) td:first-child label {
 	padding-right: 30px;
 }
+
+#ldaporg-force-group-membership .container {
+	margin-top: 10px;
+    margin-bottom: 10px;
+	padding: 5px;
+	border: 1px solid grey;
+	border-radius: 10px;
+}
 /* end of content */
 
 /* messages */

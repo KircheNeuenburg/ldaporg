@@ -74,7 +74,6 @@ Class SettingsController extends Controller {
 	
 	/**
 	 * returns all settings from this app
-	 * @NoCSRFRequired
 	 */
 	public function getSettings() {
 		// output buffer
@@ -105,7 +104,6 @@ Class SettingsController extends Controller {
 	 * returns all settings from this app
 	 * 
 	 * @param array $settings
-	 * @NoCSRFRequired
 	 */
 	public function updateSettings( $settings ) {
 		$success = true;

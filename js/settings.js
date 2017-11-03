@@ -197,7 +197,7 @@ $(document).ready(function () {
 			var self = this;
 			$.get( this._baseUrl + '/settings' ).done( function( settings ) {
 				// get all existing ldap groups
-				$.get( self._ldapcontacts_baseUrl + '/contacts/groups' ).done( function( groups ) {
+				$.get( self._ldapcontacts_baseUrl + '/groups' ).done( function( groups ) {
 					// perform special actions on every group
 					$.each( groups, function( key, group ) {
 						// check if this is the currently selected admin group
