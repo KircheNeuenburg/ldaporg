@@ -1,15 +1,26 @@
 <?xml version="1.0"?>
-<info>
+<info xmlns:xsi= "http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
 	<id>ldaporg</id>
-	<name>LDAP Organisation</name>
-	<description>Lets you easily create and edit your LDAP users and groups.</description>
-	<licence>AGPL</licence>
-    <author>Alexander Hornig</author>
+	<name lang="en">LDAP Organisation</name>
+	<description lang="en">Lets you easily create and edit your LDAP users and groups.</description>
     <version>1.1.0</version>
+	<licence>AGPL</licence>
+    <author mail="alexander@h-software.de" homepage="https://h-software.de">Alexander Hornig</author>
+    <namespace>LdapOrg</namespace>
+    
 	<types>
 		<tool/>
 	</types>
-	<namespace>LdapOrg</namespace>
+    
+    <category>tool</category>
+    
+    <website>https://github.com/KircheNeuenburg/ldaporg</website>
+    
+    <bugs>https://github.com/KircheNeuenburg/ldaporg/issues</bugs>
+
+    <repository type="git">https://github.com/KircheNeuenburg/ldaporg.git</repository>
+    
+    <screenshot>https://raw.githubusercontent.com/KircheNeuenburg/ldaporg/master/screenshots/main.jpg</screenshot>
 	
 	<dependencies>
         <user_ldap/>
