@@ -19,11 +19,7 @@ Class Admin implements ISettings {
 	 * @return TemplateResponse
 	 */
 	public function getForm() {
-		$params = [
-			'working' => true,
-		];
-		
-		return new TemplateResponse( 'ldaporg', 'settings', $params, '' );
+		return new TemplateResponse( 'ldaporg', 'settings' );
 	}
 	
 	/**

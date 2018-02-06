@@ -3,14 +3,47 @@
 
 $(document).ready(function () {
 	
+	Handlebars.registerHelper( 'istrue', function( variable, options ) {
+		if( variable == 'true' ) {
+			return options.fn( this );
+		} else {
+			return options.inverse( this );
+		}
+	});
+	Handlebars.registerHelper( 'isfalse', function( variable, options ) {
+		if( variable == 'true' ) {
+			return options.inverse( this );
+		} else {
+			return options.fn( this );
+		}
+	});
+	
+	Handlebars.registerHelper( 'each_attributes', function( data, attributes, options ) {
+		var ret = '';
+		
+		// go through every attribute
+		$.each( attributes, function( key, label ) {
+			// check if the attribute is present
+			if( typeof( data[ key ] ) == 'undefined' || data[ key ] == null ) {
+				return;
+			}
+			// add the attribute to the output
+			ret += options.fn( { label: label, data: data[ key ] } );
+		});
+		
+		return ret;
+	});
+	
 	var Users = function() {
 		this._baseUrl = OC.generateUrl( '/apps/ldaporg' );
 		this._ldapcontacts_baseUrl = OC.generateUrl( '/apps/ldapcontacts' );
 		this._users = [];
 		this._groups = [];
-		this._forcedGroupMemberships = [];
+		this._settings = [];
+		this._ldapcontacts_settings = [];
 		this._lastForcedGroupMembershipsSearch = '';
 		this._forcedGroupMembershipsSearchId = 0;
+		this._checkbox_settings = [ 'superuser_groups' ];
 	};
 	
 	Users.prototype = {
@@ -20,10 +53,29 @@ $(document).ready(function () {
 				self.renderContent();
 			});
 		},
+		loadLdapContactsSettings: function() {
+			var deferred = $.Deferred();
+			var self = this;
+			// load the ldapcontact settings
+			$.get( this._ldapcontacts_baseUrl + '/settings', function( data ) {
+				if( data.status == 'success' ) {
+					self._ldapcontacts_settings = data.data;
+					deferred.resolve();
+				}
+				else {
+					// settings couldn't be loaded
+					deferred.reject();
+				}
+			}).fail( function() {
+				// settings couldn't be loaded
+				deferred.reject();
+			});
+			return deferred.promise();
+		},
 		loadUsers: function() {
 			var deferred = $.Deferred();
 			var self = this;
-			$.get( this._baseUrl + '/load/users' ).done( function( users ) {
+			$.get( this._baseUrl + '/admin/load/users' ).done( function( users ) {
 				// reset variables
 				self._users = users;
 				deferred.resolve();
@@ -40,65 +92,69 @@ $(document).ready(function () {
 			$( '#ldaporg-existing-users' ).html( html );
 			
 			// button for selecting user
-			$( '#ldaporg-existing-users > .user > span.icon-play' ).click( function( e ) {
-				var id = $( this ).attr( 'data-id' );
+			$( '#ldaporg-existing-users > .user > span.icon-play' ).click( function() {
+				var entry_id = $( this ).attr( 'data-id' );
 				// show the users details
-				self.showUserDetails( id );
+				self.showUserDetails( entry_id );
 			});
 		},
-		showUserDetails: function( id ) {
+		showUserDetails: function( entry_id ) {
 			var user = null;
 			// look for the user
 			$.each( this._users, function( key, value ) {
-				if( value.id == id ) {
+				if( value.ldapcontacts_entry_id == entry_id ) {
 					user = value;
 					return;
 				}
 			});
 			
-			var self = this;
 			var source = $( '#ldaporg-user-details-tpl' ).html();
 			var template = Handlebars.compile( source );
-			var html = template( { user: user } );
+			var html = template( { user: user, attributes: this._ldapcontacts_settings.user_ldap_attributes } );
 			$( '#ldaporg-user-content' ).html( html );
 			this.registerModifyUserButton();
 		},
 		registerModifyUserButton: function() {
 			var self = this;
 			// button for resending welcome email
-			$( '#ldaporg-user-content .button.resend-welcome-mail' ).click( function( e ) {
-				var id = $( this ).attr( 'data-id' );
-				var user = undefined;
+			$( '#ldaporg-user-content .button.resend-welcome-mail' ).click( function() {
+				OC.msg.startSaving( '#ldaporg-user-content .msg' );
+				var entry_id = $( this ).attr( 'data-id' );
+				var user;
 				// look for the user
 				$.each( self._users, function( key, value ) {
-					if( value.id == id ) {
+					if( value.ldapcontacts_entry_id == entry_id ) {
 						user = value;
 						return;
 					}
 				});
 				// check if the user was found
-				if( typeof( user ) == 'undefined' || user == null ) { return; }
+				if( typeof( user ) == 'undefined' || user == null ) {
+					OC.msg.finishedError( '#ldaporg-user-content .msg' );
+					return;
+				}
 				
 				// resend the welcome email
-				var data = { user: user };
 				$.ajax({
-					url: self._baseUrl + '/welcomemail/resend',
+					url: self._baseUrl + '/welcomemail',
 					method: 'POST',
 					contentType: 'application/json',
-					data: JSON.stringify( data )
+					data: JSON.stringify( { mail: user[ self._settings.mail_attribute ], name: user.ldapcontacts_name } )
 				}).done( function( data ) {
 					// show message
 					OC.msg.finishedSaving( '#ldaporg-user-content .msg', data );
+				}).fail( function( data ) {
+					OC.msg.finishedError( '#ldaporg-user-content .msg' );
 				});
 			});
 			
 			// button for deleting a user
-			$( '#ldaporg-user-content .button.delete-user' ).click( function( e ) {
-				var id = $( this ).attr( 'data-id' );
-				var user = undefined;
+			$( '#ldaporg-user-content .button.delete-user' ).click( function() {
+				var entry_id = $( this ).attr( 'data-id' );
+				var user;
 				// look for the user
 				$.each( self._users, function( key, value ) {
-					if( value.id == id ) {
+					if( value.ldapcontacts_entry_id == entry_id ) {
 						user = value;
 						return;
 					}
@@ -113,18 +169,10 @@ $(document).ready(function () {
 				$( '#ldaporg-user-content' ).html( html );
 				
 				// really deleting the user
-				$( '#ldaporg-delete-user' ).click( function( e ) {
+				$( '#ldaporg-delete-user' ).click( function() {
 					OC.msg.startSaving( '#ldaporg-user-content .msg' );
-					var data = Object();
-					data.user = user;
-					
 					// delete the selected user
-					$.ajax({
-						url: self._baseUrl + '/delete/user',
-						method: 'POST',
-						contentType: 'application/json',
-						data: JSON.stringify( data )
-					}).done( function( data ) {
+					$.getJSON( self._baseUrl + '/delete/user/' + encodeURI( entry_id ), function( data ) {
 						// if the deleting was successful, reload all users
 						if( data.status == 'success' ) {
 							self.loadUsers().done( function() {
@@ -140,11 +188,13 @@ $(document).ready(function () {
 							// show error message
 							OC.msg.finishedSaving( '#ldaporg-user-content .msg', data );
 						}
+					}).fail( function() {
+						OC.msg.finishedError( '#ldaporg-user-content .msg' );
 					});
 				});
 				
 				// aborting the action
-				$( '#ldaporg-abort-delete-user' ).click( function( e ) {
+				$( '#ldaporg-abort-delete-user' ).click( function() {
 					// render the initial content area
 					self.renderContent();
 				});
@@ -160,7 +210,8 @@ $(document).ready(function () {
 			// creating user button
 			$( '#ldaporg-create-user' ).click( function( e ) {
 				e.preventDefault();
-				var data = Object();
+				
+				var data = {};
 				data.firstname = $( '#ldaporg-create-user-firstname' ).val();
 				data.lastname = $( '#ldaporg-create-user-lastname' ).val();
 				data.mail = $( '#ldaporg-create-user-mail' ).val();
@@ -174,21 +225,22 @@ $(document).ready(function () {
 					contentType: 'application/json',
 					data: JSON.stringify( data )
 				}).done( function( data ) {
-					// if sending the reset password mail was successful, reload all users
+					
+					console.log( data );
+					
+					// if creating the user was successful, reload all users
 					if( data.status == 'success' ) {
 						self.loadUsers().done( function() {
 							// render the users again
 							self.renderUsers( self._users );
 							// render the initial content area
 							self.renderContent();
-							// show a message that the use was saved
-							OC.msg.finishedSaving( '#ldaporg-user-content .msg', data );
 						});
 					}
-					else {
-						// show error message
-						OC.msg.finishedSaving( '#ldaporg-user-content .msg', data );
-					}
+					// show message
+					OC.msg.finishedSaving( '#ldaporg-user-content .msg', data );
+				}).fail( function() {
+					OC.msg.finishedError( '#ldaporg-user-content .msg' );
 				});
 			});
 		},
@@ -196,23 +248,22 @@ $(document).ready(function () {
 			var deferred = $.Deferred();
 			var self = this;
 			$.get( this._baseUrl + '/settings' ).done( function( settings ) {
-				// get all existing ldap groups
-				$.get( self._ldapcontacts_baseUrl + '/groups' ).done( function( groups ) {
-					// perform special actions on every group
-					$.each( groups, function( key, group ) {
-						// check if this is the currently selected admin group
-						if( settings.superuser_group_id == group.id ) groups[ key ].isadmin = true;
-						// check if this is the currently selected default group
-						if( settings.user_gidnumber == group.id ) groups[ key ].isdefault = true;
+				self._settings = settings;
+				self.loadGroups().done( function() {
+					// mark all superuser groups
+					$.each( self._groups, function( i, group ) {
+						if( $.inArray( group.ldapcontacts_entry_id, self._settings.superuser_groups ) != -1 ) {
+							group.ldaporg_superuser_group = true;
+						}
 					});
-					settings.groups = groups;
+					
 					// render the settings area
 					var source = $( '#ldaporg-edit-settings-tpl' ).html();
 					var template = Handlebars.compile( source );
-					var html = template({ settings: settings });
+					var html = template( { settings: self._settings, groups: self._groups } );
 					$( '#ldaporg-edit-settings' ).html( html );
-					
-					// hide password reset url options deactivated
+
+					// hide password reset url options when deactivated
 					$( '#ldaporg_pwd_reset_url_active_false' ).change( function() {
 						$( '#ldaporg-edit-settings .pwd_reset_url' ).hide(400);
 					});
@@ -221,17 +272,15 @@ $(document).ready(function () {
 						$( '#ldaporg-edit-settings .pwd_reset_url' ).show(400);
 					});
 					
-					// check if the passsword reset url options should be shown from the beginning or not
-					if( settings.pwd_reset_url_active ) $( '#ldaporg-edit-settings .pwd_reset_url' ).show();
-					else $( '#ldaporg-edit-settings .pwd_reset_url' ).hide();
-					
 					// save the settings
-					$( '#ldaporg_settings_save' ).click( function(e) {
+					$( '#ldaporg_settings_save' ).click( function( e ) {
 						e.preventDefault();
 						self.saveSettings();
 					});
-					
+
 					deferred.resolve();
+				}).fail( function() {
+					deferred.reject();
 				});
 			});
 			return deferred.promise();
@@ -240,8 +289,15 @@ $(document).ready(function () {
 			var self = this;
 			var deferred = $.Deferred();
 			// get all values from the form
-			var data = Object();
-			data.settings = $( '#ldaporg_settings_form' ).serializeArray();
+			var form = $( '#ldaporg_settings_form' ).serialize();
+			// go through all the checkboxes and check if they should be erased completely
+			$.each( self._checkbox_settings, function( i, setting ) {
+				// if the setting is not present in the serialized form, 
+				if( !~form.toLowerCase().indexOf( setting ) ) {
+					form += '&' + setting + '%5B%5D=';
+				}
+			});
+			
 			// start saving
 			OC.msg.startSaving( '#ldaporg_settings_form .msg' );
 			
@@ -250,63 +306,47 @@ $(document).ready(function () {
 				url: self._baseUrl + '/settings',
 				method: 'POST',
 				contentType: 'application/json',
-				data: JSON.stringify( data )
+				data: JSON.stringify( { settings: form } )
 			}).done( function( data ) {
 				// reload all settings
 				self.renderSettings().done( function() {
 					// saving the settings was successful
 					OC.msg.finishedSaving( '#ldaporg_settings_form .msg', data );
 				});
-			});
-			return deferred.promise();
-		},
-		loadForcedGroupMemberships: function() {
-			var self = this;
-			var deferred = $.Deferred();
-			
-			$.get( this._baseUrl + '/load/group/forcedMembership' ).done( function( data ) {
-				if( data.status == 'success' ) {
-					// reset variables
-					self._forcedGroupMemberships = data.data;
-					deferred.resolve();
-				}
-				else {
-					deferred.reject();
-				}
-			}).fail( function() {
-				deferred.reject();
+			}).fail( function( data ) {
+				OC.msg.finishedError( '#ldaporg_settings_form .msg' );
 			});
 			return deferred.promise();
 		},
 		// renders the settings for forcing group memberships
 		renderForcedGroupMemberships: function () {
 			var self = this;
-			var source = $('#ldaporg-force-group-membership-tpl').html();
-			var template = Handlebars.compile(source);
+			var source = $( '#ldaporg-force-group-membership-tpl' ).html();
+			var template = Handlebars.compile( source );
 			// get the forced groups details
-			var groups = [];
-			$.each( this._forcedGroupMemberships, function( k, id ) {
+			var forced_groups = [];
+			$.each( this._settings.forced_group_memberships, function( k, forced_group_entry_id ) {
 				$.each( self._groups, function( k2, group ) {
 					// check if this is the group
-					if( group.id == id ) {
-						groups.push( group );
+					if( group.ldapcontacts_entry_id == forced_group_entry_id ) {
+						forced_groups.push( group );
 						return false;
 					}
 				});
 			});
 			
-			var html = template({ groups: groups });
-			$('#ldaporg-force-group-membership').html(html);
+			var html = template( { groups: forced_groups } );
+			$( '#ldaporg-force-group-membership' ).html( html );
 			
 			// make a group membership optional again
 			$('#ldaporg-force-group-membership .remove').click( function() {
 				// get the groups id
-				var id = this.attributes['target-id'].value;
+				var entry_id = this.attributes['target-id'].value;
 				// unforce the groups membership
-				self.unforceGroupMembership( id );
+				self.unforceGroupMembership( entry_id );
 			});
 			
-			// search form for forcing a gropu membership
+			// search form for forcing a group membership
 			$('#ldaporg-search-non-forced-memberships-group').on( "change keyup paste", function() {
 				var value = $( this ).val();
 				
@@ -329,36 +369,81 @@ $(document).ready(function () {
 			$( '#ldaporg-apply-forced-group-membership' ).click( function() {
 				OC.msg.startSaving( '#ldaporg-force-group-membership-msg' );
 				// send request
-				$.get( self._baseUrl + '/apply/forcedMemberships', function(data) {
+				$.get( self._baseUrl + '/apply/forcedMemberships', function( data ) {
 					OC.msg.finishedSaving( '#ldaporg-force-group-membership-msg', data );
+				}).fail( function() {
+					OC.msg.finishedError( '#ldaporg-force-group-membership-msg' );
 				});
 			});
 		},
 		// force the membership of a group
-		forceGroupMembership: function(group) {
+		forceGroupMembership: function( group_entry_id ) {
 			var self = this;
 			OC.msg.startSaving( '#ldaporg-force-group-membership-msg' );
-			// send request
-			$.get( this._baseUrl + '/add/group/forcedMembership/' + encodeURI(group.id), function(data) {
-				// reload all data
-				self.loadForcedGroupMemberships().done( function() {
-					self.renderForcedGroupMemberships();
-					OC.msg.finishedSaving( '#ldaporg-force-group-membership-msg', data );
-				});
+			
+			// get the newest forced_group_memberships
+			self.loadForcedGroupMemberships().done( function() {
+				// add the new group to the array
+				self._settings.forced_group_memberships.push( group_entry_id );
+				// save the forced groups
+				self.saveForcedGroupMemberships( self._settings.forced_group_memberships );
+			}).fail( function() {
+				OC.msg.finishedError( '#ldaporg-force-group-membership-msg' );
 			});
 		},
 		// make a certain group membership optional again
-		unforceGroupMembership: function (group_id ) {
+		unforceGroupMembership: function ( group_entry_id ) {
 			var self = this;
 			OC.msg.startSaving( '#ldaporg-force-group-membership-msg' );
-			// send request
-			$.get( this._baseUrl + '/remove/group/forcedMembership/' + encodeURI( group_id ), function( data ) {
+			
+			// get the newest forced_group_memberships
+			self.loadForcedGroupMemberships().done( function() {
+				// find the group and delete it
+				var index = $.inArray( group_entry_id, self._settings.forced_group_memberships );
+				delete self._settings.forced_group_memberships[ index ];
+				// save the forced groups
+				self.saveForcedGroupMemberships( self._settings.forced_group_memberships );
+			}).fail( function() {
+				OC.msg.finishedError( '#ldaporg-force-group-membership-msg' );
+			});
+		},
+		saveForcedGroupMemberships: function( forced_groups ) {
+			var self = this;
+			// save the new forced_groups
+			$.ajax({
+				url: self._baseUrl + '/setting',
+				method: 'POST',
+				contentType: 'application/json',
+				data: JSON.stringify( { key: 'forced_group_memberships', value: forced_groups } )
+			}).done( function( data ) {
 				// reload all data
 				self.loadForcedGroupMemberships().done( function() {
 					self.renderForcedGroupMemberships();
-					OC.msg.finishedSaving( '#ldaporg-force-group-membership-msg', data );
+					// show message
+					if( data ) {
+						OC.msg.finishedSuccess( '#ldaporg-force-group-membership-msg' );
+					}
+					else {
+						OC.msg.finishedError( '#ldaporg-force-group-membership-msg' );
+					}
+				}).fail( function() {
+					OC.msg.finishedError( '#ldaporg-force-group-membership-msg' );
 				});
+			}).fail( function() {
+				OC.msg.finishedError( '#ldaporg-force-group-membership-msg' );
 			});
+		},
+		loadForcedGroupMemberships: function() {
+			var self = this;
+			var deferred = $.Deferred();
+			
+			// get the newest forced_group_memberships
+			$.get( this._baseUrl + '/setting/forced_group_memberships', function( forced_groups ) {
+				self._settings.forced_group_memberships = forced_groups;
+				deferred.resolve();
+			});
+			
+			return deferred.promise();
 		},
 		searchNonforcedMembershipGroups: function ( search ) {
 			if( search == this._lastForcedGroupMembershipsSearch ) return false;
@@ -366,7 +451,7 @@ $(document).ready(function () {
 			
 			// if the search form is empty, clean up
 			if( search == '' ) {
-				this.renderNonforcedMembershipGroupSuggestions(this._groups);
+				this.renderNonforcedMembershipGroupSuggestions( this._groups );
 				return true;
 			}
 			
@@ -388,40 +473,40 @@ $(document).ready(function () {
 					}
 				});
 			});
-			return self.renderNonforcedMembershipGroupSuggestions(matches)
+			return self.renderNonforcedMembershipGroupSuggestions( matches );
 		},
-		renderNonforcedMembershipGroupSuggestions: function(groups) {
+		renderNonforcedMembershipGroupSuggestions: function( groups ) {
 			var self = this;
 			// clear the suggestions area
-			$('#ldaporg-force-group-membership .search + .search-suggestions').empty();
+			$( '#ldaporg-force-group-membership .search + .search-suggestions' ).empty();
 			// don't show all groups at once
 			if( groups != this._groups ) {
 				// show all found groups
-				$.each( groups, function(i, group) {
+				$.each( groups, function( i, group ) {
 					// render the search suggestion
-					var html = $(document.createElement('div'))
-					.addClass('suggestion')
+					var html = $( document.createElement( 'div' ) )
+					.addClass( 'suggestion' )
 					// add the groups name
-					.text(group.cn)
+					.text( group.ldapcontacts_name )
 					// add the contact information to the suggestion
-					.data('contact', group)
+					.data( 'entry_id', group.ldapcontacts_entry_id )
 					// when clicked on the group, it will be hidden
-					.click(function() {
-						self.forceGroupMembership( $(this).data('contact') );
+					.click( function() {
+						self.forceGroupMembership( $( this ).data( 'entry_id' ) );
 					});
 					// add the option to the search suggestions
-					$('#ldaporg-force-group-membership .search + .search-suggestions').append(html);
+					$( '#ldaporg-force-group-membership .search + .search-suggestions' ).append( html );
 				});
 			}
 			
 			return true;
 		},
-		// load all visible groups
+		// load all visible and unvisible groups
 		loadGroups: function() {
 			var deferred = $.Deferred();
 			var self = this;
 			// load the groups
-			$.get( this._baseUrl + '/admin/load', function(data) {
+			$.get( this._baseUrl + '/admin/load/groups', function( data ) {
 				self._groups = data;
 				deferred.resolve();
 			}).fail( function() {
@@ -432,17 +517,19 @@ $(document).ready(function () {
 		}
 	};
 	
-	var users = new Users;
+	var users = new Users();
 	users.init();
+	
 	users.loadUsers().done( function(){
 		users.renderContent();
 		users.renderUsers( users._users );
 	});
-	users.loadGroups().done( function() {
-		users.loadForcedGroupMemberships().done( function() {
-			users.renderForcedGroupMemberships();
+	users.loadLdapContactsSettings().done( function() {
+		users.renderSettings().done( function() {
+			users.loadGroups().done( function() {
+				users.renderForcedGroupMemberships();
+			});
 		});
 	});
-	users.renderSettings();
 });
 })(OC, window, jQuery);

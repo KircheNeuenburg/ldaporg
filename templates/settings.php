@@ -21,50 +21,42 @@ style( 'ldaporg', 'settings' );
 		<form id="ldaporg_settings_form">
 			<table><tbody>
 				<tr>
-					<td><label for="ldaporg_superuser_group_id"><?php p($l->t( 'Superuser Group' )); ?></label></td>
+					<td><label for="ldaporg_superuser_groups"><?php p($l->t( 'Superuser Group' )); ?></label></td>
 					<td>
-						<select id="ldaporg_superuser_group_id" name="superuser_group_id">
-							{{#each settings.groups}}
-								<option value="{{ id }}" {{#if isadmin}}selected{{/if}}>{{ cn }}</option>
-							{{/each}}
-						</select>
-					</td>
-				</tr>
-				<tr>
-					<td><label for="ldaporg_user_gidnumber"><?php p($l->t( 'Default Group' ));?></label></td>
-					<td>
-						<select id="ldaporg_user_gidnumber" name="user_gidnumber">
-							{{#each settings.groups}}
-								<option value="{{ id }}" {{#if isdefault}}selected{{/if}}>{{ cn }}</option>
-							{{/each}}
-						</select>
+						{{#each groups}}
+							<span class="checkbox-wrapper">
+								<input type="checkbox" id="ldaporg_superuser_group_{{@index}}" name="superuser_groups[]" value="{{ ldapcontacts_entry_id }}" {{#if ldaporg_superuser_group}}checked{{/if}}>
+
+								<label for="ldaporg_superuser_group_{{@index}}">{{ ldapcontacts_name }}</label>
+							</span>
+						{{/each}}
 					</td>
 				</tr>
 				<tr>
 					<td><label><?php p($l->t( 'Use Password Reset URL' ));?></label></td>
 					<td>
-						{{#if settings.pwd_reset_url_active}}
+						{{#istrue settings.pwd_reset_url_active}}
 							<input type="radio" id="ldaporg_pwd_reset_url_active_true" name="pwd_reset_url_active" value="true" checked><label for="ldaporg_pwd_reset_url_active_true"><?php p($l->t( 'Yes' )); ?></label>
 							<input type="radio" id="ldaporg_pwd_reset_url_active_false" name="pwd_reset_url_active" value="false"><label for="ldaporg_pwd_reset_url_active_false"><?php p($l->t( 'No' )); ?></label>
 						{{else}}
 							<input type="radio" id="ldaporg_pwd_reset_url_active_true" name="pwd_reset_url_active" value="true"><label for="ldaporg_pwd_reset_url_active_true"><?php p($l->t( 'Yes' )); ?></label>
 							<input type="radio" id="ldaporg_pwd_reset_url_active_false" name="pwd_reset_url_active" value="false" checked><label for="ldaporg_pwd_reset_url_active_false"><?php p($l->t( 'No' )); ?></label>
-						{{/if}}
+						{{/istrue}}
 					</td>
 				</tr>
-				<tr class="pwd_reset_url">
+				<tr class="pwd_reset_url" {{#isfalse settings.pwd_reset_url_active}}style="display: none"{{/isfalse}}>
 					<td><label for="ldaporg_pwd_reset_url"><?php p($l->t( 'Password Reset URL' ));?></label></td>
 					<td><input type="url" id="ldaporg_pwd_reset_url" name="pwd_reset_url" value="{{ settings.pwd_reset_url }}" placeholder="<?php p($l->t( 'Password Reset URL' )); ?>"></td>
 				</tr>
-				<tr class="pwd_reset_url">
+				<tr class="pwd_reset_url" {{#isfalse settings.pwd_reset_url_active}}style="display: none"{{/isfalse}}>
 					<td><label for="ldaporg_pwd_reset_url_attr"><?php p($l->t( 'Password Reset Attribute' ));?></label></td>
 					<td><input type="text" id="ldaporg_pwd_reset_url_attr" name="pwd_reset_url_attr" value="{{ settings.pwd_reset_url_attr }}" placeholder="<?php p($l->t( 'Password Reset Attribute' )); ?>"></td>
 				</tr>
-				<tr class="pwd_reset_url">
+				<tr class="pwd_reset_url" {{#isfalse settings.pwd_reset_url_active}}style="display: none"{{/isfalse}}>
 					<td><label for="ldaporg_pwd_reset_url_attr_ldap_attr"><?php p($l->t( 'Corresponding LDAP Attribute' ));?></label></td>
 					<td><input type="text" id="ldaporg_pwd_reset_url_attr_ldap_attr" name="pwd_reset_url_attr_ldap_attr" value="{{ settings.pwd_reset_url_attr_ldap_attr }}" placeholder="<?php p($l->t( 'LDAP Attribute' )); ?>"></td>
 				</tr>
-				<tr class="pwd_reset_url">
+				<tr class="pwd_reset_url" {{#isfalse settings.pwd_reset_url_active}}style="display: none"{{/isfalse}}>
 					<td><label for="ldaporg_pwd_reset_tag"><?php p($l->t( 'Link tag to be replaced' ));?></label></td>
 					<td><input type="text" id="ldaporg_pwd_reset_tag" name="pwd_reset_tag" value="{{ settings.pwd_reset_tag }}" placeholder="<?php p($l->t( 'Link tag to be replaced' )); ?>"></td>
 				</tr>
@@ -102,7 +94,7 @@ style( 'ldaporg', 'settings' );
 			<div class="container">
 				{{#each groups}}
 					<span class="force-group-membership">
-						<span class="name">{{ cn }}</span><span class="remove" target-id="{{ id }}">X</span>
+						<span class="name">{{ ldapcontacts_name }}</span><span class="remove" target-id="{{ ldapcontacts_entry_id }}">X</span>
 					</span>
 				{{/each}}
 			</div>
@@ -124,8 +116,8 @@ style( 'ldaporg', 'settings' );
 	<script id="ldaporg-existing-users-tpl" type="text/x-handlebars-template">
 		{{#each users}}
 			<div class="user">
-				{{ name }}
-				<span class="icon icon-play" title="<?php p($l->t( 'Select' )); ?>" data-id="{{ id }}"></span>
+				{{ ldapcontacts_name }}
+				<span class="icon icon-play" title="<?php p($l->t( 'Select' )); ?>" data-id="{{ ldapcontacts_entry_id }}"></span>
 			</div>
 		{{/each}}
 	</script>
@@ -133,15 +125,23 @@ style( 'ldaporg', 'settings' );
 	
 	<script id="ldaporg-user-details-tpl" type="text/x-handlebars-template">
 		<div class="user">
-			<h3>{{ user.name }}</h3>
-			<p><b><?php p($l->t( 'E-Mail:' )); ?></b> {{user.mail }}</p>
+			<h3>{{ user.ldapcontacts_name }}</h3>
 			
-			<div class="button resend-welcome-mail" titlek="<?php p($l->t( 'Resend Welcome Mail' )); ?>" data-id="{{ user.id }}">
+			
+			
+			<table><tbody>
+			{{#each_attributes user attributes}}
+				<tr><td><b>{{ label }}</b></td><td>{{ data }}</td></tr>
+			{{/each_attributes}}
+			</table></tbody>
+			<br>
+			
+			<div class="button resend-welcome-mail" title="<?php p($l->t( 'Resend Welcome Mail' )); ?>" data-id="{{ user.ldapcontacts_entry_id }}">
 				<?php p($l->t( 'Resend Welcome Mail' )); ?>&nbsp;
 				<span class="icon icon-mail"></span>
 			</div>
 			
-			<div class="delete-user button" title="<?php p($l->t( 'Delete User' )); ?>" data-id="{{ user.id }}">
+			<div class="delete-user button" title="<?php p($l->t( 'Delete User' )); ?>" data-id="{{ user.ldapcontacts_entry_id }}">
 				<?php p($l->t( 'Delete User' )); ?>
 				<span class="icon icon-delete"></span>
 			</div>
@@ -179,7 +179,7 @@ style( 'ldaporg', 'settings' );
 		</form>
 	</script>
 	<script id="ldaporg-user-delete-tpl" type="text/x-handlebars-template">
-		<h3><?php p($l->t( 'Do you really want to delete the user {{ user.name }}?' )); ?></h3>
+		<h3><?php p($l->t( 'Do you really want to delete the user {{ user.ldapcontacts_name }}?' )); ?></h3>
 		<div class="msg-container"><span class="msg"></span></div>
 				
 		<div>

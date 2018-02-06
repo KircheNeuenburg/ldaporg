@@ -3,7 +3,7 @@
 	<id>ldaporg</id>
 	<name lang="en">LDAP Organisation</name>
 	<description lang="en">Lets you easily create and edit your LDAP users and groups.</description>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
 	<licence>AGPL</licence>
     <author mail="alexander@h-software.de" homepage="https://h-software.de">Alexander Hornig</author>
     <namespace>LdapOrg</namespace>
