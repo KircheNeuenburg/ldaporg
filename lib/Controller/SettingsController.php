@@ -87,6 +87,8 @@ class SettingsController extends Controller {
 	
 	/**
 	 * returns all settings from this app
+	 * 
+	 * @NoAdminRequired
 	 */
 	public function getSettings() {
 		// output buffer

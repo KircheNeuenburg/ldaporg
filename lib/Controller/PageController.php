@@ -182,7 +182,7 @@ class PageController extends ContactController {
 		$stmt->execute();
 		
 		// check for sql errors
-		if( $stmt->errorCode() != '00000' ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'User is now an admin' ) ), 'status' => 'success' ) );
+		if( $stmt->errorCode() == '00000' ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'User is now an admin' ) ), 'status' => 'success' ) );
 		else return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Making user admin failed' ) ), 'status' => 'error' ) );
 	}
 	
@@ -195,7 +195,7 @@ class PageController extends ContactController {
 	 */
 	public function groupRemoveAdminUser( string $user_entry_id, string $group_entry_id ) {
 		// check if the user is allowed to edit this group
-		if( !$this->userCanEdit( $group_entry_id ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Permission denied' ) ), 'status' => 'error' ) );
+		if( $user_entry_id != $this->getOwnEntryId() && !$this->userCanEdit( $group_entry_id ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Permission denied' ) ), 'status' => 'error' ) );
 		
 		// run sql query
 		$sql = "DELETE FROM *PREFIX*ldaporg_group_admins WHERE group_id = ? AND admin_id = ?";

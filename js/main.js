@@ -5,10 +5,12 @@ $(document).ready(function() {
 	
 // main rendering object
 var Groups = function() {
-	this._baseUrl = OC.generateUrl('/apps/ldaporg');
+	this._baseUrl = OC.generateUrl( '/apps/ldaporg' );
+	this._ldapContactsbaseUrl = OC.generateUrl( '/apps/ldapcontacts' );
 	this._activeGroup = undefined;
 	this._groups = [];
 	this._users = [];
+	this._settings = [];
 	this._me = undefined;
 	this._last_search = '';
 	this._search_id = 0;
@@ -21,14 +23,20 @@ Groups.prototype = {
 	loadGroups: function() {
 		var deferred = $.Deferred();
         var self = this;
-        $.get( this._baseUrl + '/load' ).done( function( groups ) {
-			// save the fetched groups
-			self._groups = groups;
-			// reload the active group if there was one
-			if( typeof( self._activeGroup ) != 'undefined' && self._activeGroup != null )
-				self.load( self._activeGroup['id'], true );
-            deferred.resolve();
-        }).fail(function () {
+        $.get( this._baseUrl + '/load/groups' ).done( function( data ) {
+			if( data.status == 'success' ) {
+				// save the fetched groups
+				self._groups = data.data;
+				// reload the active group if there was one
+				if( typeof( self._activeGroup ) != 'undefined' && self._activeGroup != null ) {
+					self.load( self._activeGroup.ldapcontacts_entry_id, true );
+				}
+				deferred.resolve();
+			}
+			else {
+				deferred.reject();
+			}
+        }).fail( function () {
             deferred.reject();
         });
         return deferred.promise();
@@ -37,10 +45,15 @@ Groups.prototype = {
 	loadUsers: function() {
 		var deferred = $.Deferred();
         var self = this;
-        $.get( this._baseUrl + '/load/users' ).done( function( users ) {
-			// save the fetched users
-			self._users = users;
-            deferred.resolve();
+        $.get( this._baseUrl + '/load/users' ).done( function( data ) {
+			if( data.status == 'success' ) {
+				// save the fetched users
+				self._users = data.data;
+				deferred.resolve();
+			}
+			else {
+				deferred.reject();
+			}
         }).fail(function () {
             deferred.reject();
         });
@@ -50,7 +63,7 @@ Groups.prototype = {
 	loadOwn: function() {
 		var deferred = $.Deferred();
         var self = this;
-        $.get( this._baseUrl + '/load/own' ).done( function( me ) {
+        $.get( this._ldapContactsbaseUrl + '/own' ).done( function( me ) {
 			// save the fetched users
 			self._me = me[0];
             deferred.resolve();
@@ -70,52 +83,38 @@ Groups.prototype = {
 				// load current user
 				self.loadOwn().done( function() {
 					// load forced group memberships
-					self.loadForcedGroupMemberships().done( function() {
+					self.loadSettings().done( function() {
 						deferred.resolve();
-					}).fail(function () {
+					}).fail( function() {
+						deferred.reject();
+					});
+				}).fail( function() {
 					deferred.reject();
 				});
-				}).fail(function () {
-					deferred.reject();
-				});
-			}).fail(function () {
+			}).fail( function() {
 				deferred.reject();
 			});
-		}).fail(function () {
+		}).fail( function() {
             deferred.reject();
         });
 		return deferred.promise();
 	},
-	loadForcedGroupMemberships: function() {
-		var self = this;
+	loadSettings: function() {
 		var deferred = $.Deferred();
-
-		$.get( this._baseUrl + '/load/group/forcedMembership' ).done( function( data ) {
-			if( data.status == 'success' ) {
-				// reset variables
-				self._forcedGroupMemberships = data.data;
-				deferred.resolve();
-			}
-			else {
-				deferred.reject();
-			}
-		}).fail( function() {
-			deferred.reject();
-		});
+		var self = this;
+		$.get( this._baseUrl + '/settings' ).done( function( settings ) {
+			self._settings = settings;
+			deferred.resolve();
+		}).fail( function( data ) {
+            deferred.reject();
+        });
 		return deferred.promise();
 	},
 	// load a groups data and render it in the content area if needed
-	load: function( id, no_render ) {
+	load: function( entry_id, no_render ) {
 		var self = this;
-		this._activeGroup = undefined;
-		// go through all groups and look for this one
-		$.each( this._groups, function( key, data ) {
-			// check if this is the right group
-			if( data.id == id ) {
-				self._activeGroup = data;
-				return;
-			}
-		});
+		this._activeGroup = this._groups[ entry_id ];
+		
 		// render the content if needed
 		if( typeof( no_render ) == 'undefined' || !no_render )
 			return this.renderContent( true );
@@ -128,24 +127,28 @@ Groups.prototype = {
 			self.renderNavigationHeader().done( function() {
 				self.renderNavigation();
 				deferred.resolve();
+			}).fail(function () {
+				deferred.reject();
 			});
-		});
+		}).fail(function () {
+            deferred.reject();
+        });
 		return deferred.promise();
 	},
-	// render 
+	// render navigation header
 	renderNavigationHeader: function() {
 		var deferred = $.Deferred();
 		var self = this;
 		
 		// check if the current user has superuser rights
-		$.get( this._baseUrl + '/superuser' ).done( function( superuser ) {
+		$.get( this._baseUrl + '/superuser' ).done( function( data ) {
+			var superuser = ( data.status == 'success' && data.data ) ? true : false;
 			// if the user is not a superuser, don't show the special options
 			if( !superuser ) {
 				$( '#navigation-header' ).remove();
-				
 				// remove the superuser attribute from every group
 				$.each( self._groups, function( key, value ) {
-					self._groups[ key ]['superuser'] = false;
+					self._groups[ key ].superuser = false;
 				});
 				self._superuser = false;
 				
@@ -155,7 +158,7 @@ Groups.prototype = {
 			
 			// add the superuser attribute to every group
 			$.each( self._groups, function( key, value ) {
-				self._groups[ key ]['superuser'] = true;
+				self._groups[ key ].superuser = true;
 			});
 			self._superuser = true;
 			
@@ -177,18 +180,15 @@ Groups.prototype = {
 				
 				$( '#add-group-create' ).click( function( e ) {
 					e.preventDefault();
-					var gid = false;
 					var deferred = $.Deferred();
 					OC.msg.startSaving( '#info .msg' );
-					var data = Object();
-					data.group_name = $( '#add-group-name' ).val();
 					
 					// create a new group
 					$.ajax({
-						url: self._baseUrl + '/add/group',
+						url: self._baseUrl + '/create/group',
 						method: 'POST',
 						contentType: 'application/json',
-						data: JSON.stringify( data )
+						data: JSON.stringify( { group_name: $( '#add-group-name' ).val() } )
 					}).done( function( data ) {
 						// if the creating was successful, reload all groups
 						if( data.status == 'success' ) {
@@ -226,26 +226,20 @@ Groups.prototype = {
 		
 		// load a group
         $( '#group-navigation .group > a.load' ).click( function() {
-            var id = parseInt( $( this ).parent().data( 'id' ), 10 );
-			self.load( id );
+            var entry_id = $( this ).parent().data( 'id' );
+			self.load( entry_id );
         });
 		
 		// remove a group if the user is a superuser
 		if( this._superuser ) {
 			$( '#group-navigation .group > a > span.icon-delete' ).click( function( e ) {
-				var group_id = $( this ).attr( 'data-id' );
+				var group_entry_id = $( this ).attr( 'data-id' );
 				// ask the user if he really wants to delete this group
 				var source = $( '#remove-group-tpl' ).html();
 				var template = Handlebars.compile( source )
 				
-				var group = undefined;
-				// find the group that has to be removed
-				$.each( self._groups, function( key, value ) {
-					if( value['id'] == group_id ) {
-						group = value;
-						return;
-					}
-				});
+				// get the group
+				var group = self._groups[ group_entry_id ];
 				// check if the group was found
 				if( typeof( group ) == 'undefined' || group == null ) return;
 				
@@ -256,16 +250,9 @@ Groups.prototype = {
 				$( '#remove-group' ).click( function() {
 					var deferred = $.Deferred();
 					OC.msg.startSaving( '#info .msg' );
-					var data = Object();
-					data.group = group;
 					
 					// remove the group
-					$.ajax({
-						url: self._baseUrl + '/remove/group',
-						method: 'POST',
-						contentType: 'application/json',
-						data: JSON.stringify( data )
-					}).done( function( data ) {
+					$.get( self._baseUrl + '/delete/group/' + encodeURI( group_entry_id ) ).done( function( data ) {
 						// if the removing was successful, reload all groups
 						if( data.status == 'success' ) {
 							self.loadAll().done( function() {
@@ -282,8 +269,12 @@ Groups.prototype = {
 						else {
 							// show error message
 							OC.msg.finishedSaving( '#info .msg', data );
-							deferred.resolve();
+							deferred.reject();
 						}
+					}).fail( function() {
+						// show error message
+						OC.msg.finishedError( '#info .msg' );
+						deferred.reject();
 					});
 					return deferred.promise();
 				});
@@ -298,19 +289,21 @@ Groups.prototype = {
 	// render the content area
 	renderContent: function( load ) {
 		// show loading icon if needed
-		if( typeof( load ) != 'undefined' && load != null )
+		if( typeof( load ) != 'undefined' && load != null ) {
 			$( '#info' ).html( Handlebars.compile( $( '#loading-tpl' ).html() )() );
+		}
 		
 		var self = this;
-		var data = Object();
-		data.group = this._activeGroup;
-        // check if the user is allowed to edit this group
-		return $.ajax({
-            url: this._baseUrl + '/canedit',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify( data )
-        }).done( function( canedit ) {
+		
+		var group_entry_id;
+		if( typeof( self._activeGroup ) != 'undefined' && self._activeGroup != null ) {
+			group_entry_id = self._activeGroup.ldapcontacts_entry_id;
+		}
+		
+		// check if the user is allowed to edit this group
+		return $.get( this._baseUrl + '/canedit/' + encodeURI( group_entry_id ) ).done( function( data ) {
+			var canedit = data.status == 'success' && data.data ? true : false;
+			
 			var source = $( '#content-tpl' ).html();
 			var template = Handlebars.compile( source );
 			var html_option = { group: self._activeGroup, notForcedMembership: true };
@@ -318,59 +311,63 @@ Groups.prototype = {
 			// check if a group has been selected
 			if( typeof( self._activeGroup ) != 'undefined' && self._activeGroup != null ) {
 				// check the users editing rights on the group
-				if( canedit === true ) self._activeGroup.canedit = true;
-				else delete self._activeGroup.canedit;
-			
+				if( canedit === true ) self._activeGroup.ldaporg_canedit = true;
+				else delete self._activeGroup.ldaporg_canedit;
+				
 				// check if the current user is in the group
-				$.each( self._me.groups, function( index, group ) {
-					if( group.id == self._activeGroup.id ) html_option.me = true;
-				});
+				var is_member = self._activeGroup.ldaporg_members[ self._me.ldapcontacts_entry_id ];
+				if( typeof( is_member ) != 'undefined' && is_member != null ) {
+					html_option.me = true;
+				}
 				
 				// check if the current group has forced membership
-				$.each( self._forcedGroupMemberships, function( key, id ) {
+				$.each( self._settings.forced_group_memberships, function( key, entry_id ) {
 					// check if this is the active group
-					if( self._activeGroup.id == id ) {
+					if( self._activeGroup.ldapcontacts_entry_id == entry_id ) {
 						html_option.notForcedMembership = false;
 						return false;
 					}
 				});
 				
 				// get number of members
-				html_option.memberCount = self._activeGroup.members.length;
+				html_option.memberCount = self._activeGroup.ldaporg_members.length;
 				
 				// add export member details url
-				html_option.exportURL = self._baseUrl + '/export/' + self._activeGroup.id;
+				html_option.exportURL = self._baseUrl + '/export/' + encodeURI( self._activeGroup.ldapcontacts_entry_id );
 			}
-
+			else {
+				canedit = false;
+			}
+			
 			// render content
 			$( '#info' ).html( template( html_option ) );
 			$( '#info' ).focus();
 			
-			$( '#group_add_member' ).on( "change keyup paste", function() {
-				var value = $( this ).val();
-				
-				// check if we are still searching
-				if( value == '' ) $( this ).removeClass( 'searching' );
-				else $( this ).addClass( 'searching' );
-				
-				// search for the given value and render the navigation
-				self.searchUsers( value );
-			});
-			
-			// button for clearing search input
-			$( "#group_add_member + .abort" ).click( function() {
-				$( "#group_add_member" ).val('');
-				$( "#group_add_member" ).trigger( 'change' );
-			});
-			
 			// button for leaving the group
 			$( "#leave_group" ).click( function() {
 				// remove the current user
-				self.removeUser( self._me );
+				self.removeUser( self._me.ldapcontacts_entry_id );
 			});
 			
 			// admin only functions
 			if( canedit ) {
+				$( '#group_add_member' ).on( "change keyup paste", function() {
+					var value = $( this ).val();
+
+					// check if we are still searching
+					if( value == '' ) $( this ).removeClass( 'searching' );
+					else $( this ).addClass( 'searching' );
+
+					// search for the given value and render the navigation
+					self.searchUsers( value );
+				});
+
+				// button for clearing search input
+				$( "#group_add_member + .abort" ).click( function() {
+					$( "#group_add_member" ).val('');
+					$( "#group_add_member" ).trigger( 'change' );
+				});
+				
 				// expanding menu
 				$( ".members-menu > td > a" ).click( function( e ) {
 					e.stopPropagation();
@@ -396,30 +393,18 @@ Groups.prototype = {
 					var target = $( this );
 					// get the user id and required action
 					var action = target.attr( "data-action" );
-					var uid = target.attr( "data-id" );
-					
-					var user = undefined;
-					// go through the members of the current group and look for the user
-					$.each( self._activeGroup["members"], function( k, member ) {
-						if( member["id"] == uid ) {
-							user = member;
-							return;
-						}
-					});
-					
-					// check if the user was found in the group
-					if( typeof( user ) == 'undefined' || user == null ) return false;
+					var user_entry_id = target.attr( "data-id" );
 					
 					// choose the right action
 					switch( action ) {
 						case "addAdmin":
-							self.addAdminUser( user );
+							self.addAdminUser( user_entry_id );
 							break;
 						case "removeAdmin":
-							self.removeAdminUser( user );
+							self.removeAdminUser( user_entry_id );
 							break;
 						case "remove":
-							self.removeUser( user );
+							self.removeUser( user_entry_id );
 							break;
 					}
 				});
@@ -443,24 +428,19 @@ Groups.prototype = {
 		
 		var matches = [];
 		
-		$( this._users ).each( function( i, contact ) {
+		$( this._users ).each( function( i, user ) {
 			if( self._search_id != id ) return false;
-			$.each( contact, function( key, value ) {
+			$.each( user, function( key, value ) {
 				if( typeof( value ) != 'string' && typeof( value ) != 'number' ) return;
 				value = String( value ).toLowerCase();
+				
 				if( ~value.indexOf( search ) ) {
-					var in_group = false;
-					// check if the user is already a member of this group
-					$.each( self._activeGroup.members, function( i, member ) {
-						// if the user is already a member of the group, we are done searching
-						if( contact.id == member.id ) {
-							in_group = true;
-							return;
-						}
-					});
+					var in_group = self._activeGroup.ldaporg_members[ user.ldapcontacts_entry_id ];
+					in_group = ( typeof( in_group ) == 'undefined' || in_group == null ) ? false : true;
+					
 					// check if the user was identified as a member of the group
-					if( !in_group && $.inArray( contact, matches ) == -1 ) {
-						matches.push( contact );
+					if( !in_group && $.inArray( user, matches ) == -1 ) {
+						matches.push( user );
 					}
 					return;
 				}
@@ -481,7 +461,7 @@ Groups.prototype = {
 				var html = $( document.createElement( 'div' ) )
 				.addClass( 'suggestion' )
 				// add the users name
-				.text( user.name )
+				.text( user.ldapcontacts_name )
 				// add the user information to the suggestion
 				.data( 'user', user )
 				// when clicked on the user, he will be added to the group
@@ -491,7 +471,7 @@ Groups.prototype = {
 					$( "#group_add_member" ).val('');
 					$( "#group_add_member" ).trigger( 'change' );
 					// add the user to the group
-					self.addUser( user );
+					self.addUserToGroup( user.ldapcontacts_entry_id );
 				});
 				
 				// add the option to the search suggestions
@@ -502,95 +482,103 @@ Groups.prototype = {
 		return true;
 	},
 	// add a user the currently active group
-	addUser: function( user ) {
+	addUserToGroup: function( user_entry_id ) {
 		var self = this;
 		OC.msg.startSaving( '#info .msg' );
-		// prepare the data for posting
-		var data = Object();
-		data.group = this._activeGroup;
-		data.user = user;
 		
 		// add the user to the group
 		return $.ajax({
             url: this._baseUrl + '/add/group/user',
             method: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify( data )
+            data: JSON.stringify( { user_entry_id: user_entry_id, group_entry_id: self._activeGroup.ldapcontacts_entry_id } )
         }).done( function( data ) {
 			self.loadAll().done( function() {
 				self.render().done( function() {
 					OC.msg.finishedSaving( '#info .msg', data );
+				}).fail( function() {
+					OC.msg.finishedError( '#info .msg' );
 				});
+			}).fail( function() {
+				OC.msg.finishedError( '#info .msg' );
 			});
+		}).fail( function() {
+			OC.msg.finishedError( '#info .msg' );
 		});
 	},
 	// remove a user from the currently active group
-	removeUser: function( user ) {
+	removeUser: function( user_entry_id ) {
 		var self = this;
 		OC.msg.startSaving( '#info .msg' );
-		// prepare the data for posting
-		var data = Object();
-		data.group = this._activeGroup;
-		data.user = user;
 		
 		// add the user to the group
 		return $.ajax({
             url: this._baseUrl + '/remove/group/user',
             method: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify( data )
+            data: JSON.stringify( { user_entry_id: user_entry_id, group_entry_id: this._activeGroup.ldapcontacts_entry_id } )
         }).done( function( data ) {
 			self.loadAll().done( function() {
 				self.render().done( function() {
 					OC.msg.finishedSaving( '#info .msg', data );
+				}).fail( function() {
+					OC.msg.finishedError( '#info .msg' );
 				});
+			}).fail( function() {
+				OC.msg.finishedError( '#info .msg' );
 			});
+		}).fail( function() {
+			OC.msg.finishedError( '#info .msg' );
 		});
 	},
 	// add admin privileges to a user the currently active group
-	addAdminUser: function( user ) {
+	addAdminUser: function( user_entry_id ) {
 		var self = this;
 		OC.msg.startSaving( '#info .msg' );
-		// prepare the data for posting
-		var data = Object();
-		data.group = this._activeGroup;
-		data.user = user;
 		
 		// add the user to the group
 		return $.ajax({
             url: this._baseUrl + '/add/group/user/admin',
             method: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify( data )
+            data: JSON.stringify( { user_entry_id: user_entry_id, group_entry_id: this._activeGroup.ldapcontacts_entry_id } )
         }).done( function( data ) {
 			self.loadAll().done( function() {
 				self.render().done( function() {
 					OC.msg.finishedSaving( '#info .msg', data );
+				}).fail( function() {
+					OC.msg.finishedError( '#info .msg' );
 				});
+			}).fail( function() {
+				OC.msg.finishedError( '#info .msg' );
 			});
+		}).fail( function() {
+			OC.msg.finishedError( '#info .msg' );
 		});
 	},
 	// remove admin privileges from a user from the currently active group
-	removeAdminUser: function( user ) {
+	removeAdminUser: function( user_entry_id ) {
 		var self = this;
 		OC.msg.startSaving( '#info .msg' );
-		// prepare the data for posting
-		var data = Object();
-		data.group = this._activeGroup;
-		data.user = user;
 		
 		// add the user to the group
 		return $.ajax({
             url: this._baseUrl + '/remove/group/user/admin',
             method: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify( data )
+            data: JSON.stringify( { user_entry_id: user_entry_id, group_entry_id: this._activeGroup.ldapcontacts_entry_id } )
         }).done( function( data ) {
 			self.loadAll().done( function() {
 				self.render().done( function() {
 					OC.msg.finishedSaving( '#info .msg', data );
+				}).fail( function() {
+					OC.msg.finishedError( '#info .msg' );
 				});
+			}).fail( function() {
+				OC.msg.finishedError( '#info .msg' );
 			});
+		}).fail( function() {
+			OC.msg.finishedError( '#info .msg' );
 		});
 	}
 };
@@ -601,7 +589,7 @@ Groups.prototype = {
 var Tutorial = function () {
 	this._baseUrl = OC.generateUrl( '/apps/ldaporg' );
 	this._state = 0;
-	this._max_state = 5;
+	this._max_state = 6;
 	this._parents = [
 		"#group-navigation > ul",
 		"#group-navigation > ul",
@@ -609,6 +597,7 @@ var Tutorial = function () {
 		"#info > .content-nav",
 		"#info > .content-nav",
 		"#info > h3",
+		"#export_member_details",
 	];
 };
 
@@ -672,6 +661,13 @@ Tutorial.prototype = {
 				return groups.load( $( '#group-navigation > ul > li:first-child' ).attr( 'data-id' ) );
 		}
 		else if( this._state == 5 || this._state == "5" )
+		{
+			if( $( document ).width() < 769 )
+				$( '#app-content' ).css( 'transform', 'translate3d(0px, 0px, 0px)' );
+			if( typeof( groups._activeGroup ) == 'undefined' || groups._activeGroup == null )
+				return groups.load( $( '#group-navigation > ul > li:first-child' ).attr( 'data-id' ) );
+		}
+		else if( this._state == 6 || this._state == "6" )
 		{
 			if( $( document ).width() < 769 )
 				$( '#app-content' ).css( 'transform', 'translate3d(0px, 0px, 0px)' );

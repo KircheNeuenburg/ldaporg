@@ -225,9 +225,6 @@ $(document).ready(function () {
 					contentType: 'application/json',
 					data: JSON.stringify( data )
 				}).done( function( data ) {
-					
-					console.log( data );
-					
 					// if creating the user was successful, reload all users
 					if( data.status == 'success' ) {
 						self.loadUsers().done( function() {
