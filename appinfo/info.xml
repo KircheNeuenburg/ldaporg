@@ -23,7 +23,7 @@ Manage your LDAP users and groups directly in Nextcloud
 		<tool/>
 	</types>
     
-    <category>tool</category>
+    <category>tools</category>
     
     <website>https://github.com/KircheNeuenburg/ldaporg</website>
     
