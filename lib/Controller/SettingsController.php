@@ -17,8 +17,9 @@ use OCP\IConfig;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Controller;
 
-Class SettingsController extends Controller {
-	protected $appName;
+class SettingsController extends Controller {
+	protected $AppName;private $uid;
+	protected $array_settings = [ 'superuser_groups', 'forced_group_memberships' ];
 	/** @var IL10N */
 	private $l;
 	/** @var IConfig */
@@ -31,19 +32,23 @@ Class SettingsController extends Controller {
 	 * @param string $AppName
 	 * @param IRequest $request
 	 * @param IL10N $l10n
+	 * @param IConfig $config
+	 * @param string $UserId
 	 */
-	public function __construct( $AppName, IRequest $request, IL10N $l10n, IConfig $config ) {
+	public function __construct( string $AppName, IRequest $request, IL10N $l10n, IConfig $config, string $UserId ) {
 		// check we have a logged in user
 		\OCP\User::checkLoggedIn();
 		parent::__construct( $AppName, $request );
-		$this->appName = $AppName;
-		$this->l = $l10n;
+		// set class variables
+		$this->AppName = $AppName;
 		$this->config = $config;
+        // load translation files
+		$this->l = $l10n;
 		// get the current users id
-		$this->uid = \OC::$server->getUserSession()->getUser()->getUID();
+		$this->uid = $UserId;
 		// fill default values
-		$this->default = array(
-			'superuser_group_id' => 500,
+		$this->default = [
+			'superuser_groups' => '[]',
 			'user_gidnumber' => 501,
 			'pwd_reset_url_active' => false,
 			'pwd_reset_url' => '',
@@ -54,26 +59,36 @@ Class SettingsController extends Controller {
 			'welcome_mail_from_adress' => 'info@example.com',
 			'welcome_mail_from_name' => 'Nextcloud',
 			'welcome_mail_message' => $this->l->t( 'Welcome to Nextcloud! We hope you enjoy your time here.' ),
-			'forced_group_memberships' => '',
-			'contacts_available_data' => array( 'mail' => $this->l->t( 'Mail' ), 'givenname' => $this->l->t( 'First Name' ), 'sn' => $this->l->t( 'Last Name' ), 'street' => $this->l->t( 'Street' ), 'postaladdress' => $this->l->t( 'House number' ), 'postalcode' => $this->l->t( 'zip Code' ), 'l' => $this->l->t( 'City' ), 'homephone' => $this->l->t( 'Phone' ), 'mobile' => $this->l->t( 'Mobile' ), 'description' => $this->l->t( 'About me' ) ),
+			'forced_group_memberships' => '[]',
 			'csv_seperator' => ';',
-		);
-		$this->user_default = array(
+			'mail_attribute' => 'mail',
+			'firstname_attribute' => 'givenname',
+			'lastname_attribtue' => 'sn',
+		];
+		$this->user_default = [
 			'tutorial_state' => 0,
-		);
+		];
 	}
 	
 	/**
 	 * returns the value for the given general setting
+	 * 
+	 * @param string $key
 	 */
-	public function getSetting( $key ) {
+	public function getSetting( string $key ) {
 		// check if this is a valid setting
 		if( !isset( $this->default[ $key ] ) ) return false;
-		return $this->config->getAppValue( $this->appName, $key, $this->default[ $key ] );
+		$setting = $this->config->getAppValue( $this->appName, $key, $this->default[ $key ] );
+		// if this is an array setting, convert it
+		if( in_array( $key, $this->array_settings ) ) $setting = json_decode( $setting );
+		// return the setting
+		return $setting;
 	}
 	
 	/**
 	 * returns all settings from this app
+	 * 
+	 * @NoAdminRequired
 	 */
 	public function getSettings() {
 		// output buffer
@@ -93,9 +108,11 @@ Class SettingsController extends Controller {
 	 * @param string $key
 	 * @param mixed $value
 	 */
-	public function updateSetting( $key, $value ) {
+	public function updateSetting( string $key, $value ) {
 		// check if the setting is an actual setting this app has
 		if( !isset( $this->default[ $key ] ) ) return false;
+		// if this is an array setting, convert it
+		if( in_array( $key, $this->array_settings ) ) $value = json_encode( $value );
 		// save the setting
 		return !$this->config->setAppValue( $this->appName, $key, $value );
 	}
@@ -103,17 +120,23 @@ Class SettingsController extends Controller {
 	/**
 	 * returns all settings from this app
 	 * 
-	 * @param array $settings
+	 * @param string $settings
 	 */
-	public function updateSettings( $settings ) {
+	public function updateSettings( string $settings ) {
+		// parse the serialized form
+		parse_str( urldecode( $settings ), $array );
+		$settings = $array;
+		
 		$success = true;
 		// go through every setting and update it
-		 foreach( $settings as $array ) {
-			 $success &= $this->updateSetting( $array['name'], $array['value'] );
-		 }
-		 // return message
-		 if( $success ) return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'Settings saved' ) ), 'status' => 'success' ) );
-		 else return new DataResponse( array( 'data' => array( 'message' => $this->l->t( 'Saving settings failed' ) ), 'status' => 'error	' ) );
+		foreach( $settings as $key => $value ) {
+			// update the setting
+			$success &= $this->updateSetting( $key, $value );
+		}
+		
+		// return message
+		if( $success ) return new DataResponse( [ 'data' => [ 'message' => $this->l->t( 'Settings saved' ) ], 'status' => 'success'] );
+		else return new DataResponse( [ 'data' => [ 'message' => $this->l->t( 'Something went wrong while saving the settings. Please try again.' ) ], 'status' => 'error' ] );
 	}
 	
 	/**
@@ -122,22 +145,28 @@ Class SettingsController extends Controller {
 	 * @param string $key
 	 * @NoAdminRequired
 	 */
-	public function getUserValue( $key ) {
+	public function getUserValue( string $key ) {
 		// check if this is a valid setting
 		if( !isset( $this->user_default[ $key ] ) ) return false;
-		return $this->config->getUserValue( $this->uid, $this->appName, $key, $this->user_default[ $key ] );
+		$value = $this->config->getUserValue( $this->uid, $this->appName, $key, $this->user_default[ $key ] );
+		// if this is an array setting, convert it
+		if( in_array( $key, $this->array_settings ) ) $value = json_decode( $value );
+		return $value;
 	}
 	
 	/**
 	 * saves the given setting an returns a DataResponse
 	 * 
 	 * @param string $key
-	 * @param string $value
+	 * @param mixed $value
 	 * @NoAdminRequired
 	 */
-	public function setUserValue( $key, $value ) {
+	public function setUserValue( string $key, $value ) {
 		// check if this is a valid setting
 		if( !isset( $this->user_default[ $key ] ) ) return false;
+		// if this is an array setting, convert it
+		if( in_array( $key, $this->array_settings ) ) $value = json_encode( $value );
+		// save the value
 		return $this->config->setUserValue( $this->uid, $this->appName, $key, $value );
 	}
 }

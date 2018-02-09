@@ -2,8 +2,19 @@
 <info xmlns:xsi= "http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
 	<id>ldaporg</id>
 	<name lang="en">LDAP Organisation</name>
-	<description lang="en">Lets you easily create and edit your LDAP users and groups.</description>
-    <version>1.1.0</version>
+	<summary lang="en">Lets you easily create and edit your LDAP users and groups.</summary>
+	<description><![CDATA[# LdapOrg
+Manage your LDAP users and groups directly in Nextcloud
+
+### Features
+  * Create and delete your LDAP users and groups with one click.
+  * Ability to send a welcome and seting password E-Mail automatically when creating a new user.
+  * Users can see all the groups they are a member of and all the other members in their groups
+
+### Requirements
+  * [LdapContacts](https://github.com/KircheNeuenburg/LdapContacts)
+  * active LDAP authentification (check [Nextcloud admin manual](https://docs.nextcloud.com/server/13/admin_manual/configuration_user/user_auth_ldap.html) for details)]]></description>
+    <version>1.2.0</version>
 	<licence>AGPL</licence>
     <author mail="alexander@h-software.de" homepage="https://h-software.de">Alexander Hornig</author>
     <namespace>LdapOrg</namespace>
@@ -25,7 +36,7 @@
 	<dependencies>
         <user_ldap/>
         <ldapcontacts/>
-        <nextcloud min-version="11" max-version="12"/>
+        <nextcloud min-version="11" max-version="13"/>
     </dependencies>
 	
 	<settings>

@@ -63,6 +63,20 @@
 	padding-right: 30px;
 }
 
+#ldaporg-edit-settings .checkbox-wrapper-wrapper {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+#ldaporg-edit-settings .checkbox-wrapper {
+	padding-right: 20px;
+}
+
+#ldaporg-edit-settings .checkbox-wrapper > input[type="checkbox"] {
+    vertical-align: middle;
+	margin: 3px 3px 4px 0px;
+}
+
 #ldaporg-force-group-membership .container {
 	margin-top: 10px;
     margin-bottom: 10px;
@@ -190,4 +204,3 @@
 	opacity: 0.8;
 }
 /* end of search */
-}

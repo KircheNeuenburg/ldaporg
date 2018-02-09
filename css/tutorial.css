@@ -99,7 +99,7 @@
 
 /* 3 */
 	#tutorial-container[tutorial-id="3"] {
-		top: 45px;
+		top: 18px;
 		left: 15px;
 	}
 	
@@ -125,7 +125,7 @@
 
 /* 4 */
 	#tutorial-container[tutorial-id="4"] {
-		top: 45px;
+		top: 18px;
 		left: 160px;
 	}
 	
@@ -151,7 +151,7 @@
 
 /* 5 */
 	#tutorial-container[tutorial-id="5"] {
-		top: 32px;
+		top: 75px;
 		left: 15px;
 	}
 	
@@ -173,5 +173,32 @@
 		border-right-color: transparent;
 		border-top-color: #69abf5;
 		margin-bottom: -42px;
+		margin-left: 20px;
+	}
+
+/* 6 */
+	#tutorial-container[tutorial-id="6"] {
+		top: 116px;
+		left: 15px;
+	}
+	
+	#tutorial-container[tutorial-id="6"]:after, #tutorial-container[tutorial-id="6"]:before {
+		bottom: 0px;
+		left: 0px;
+	}
+
+	#tutorial-container[tutorial-id="6"]:after {
+		border-width: 16px;
+		border-right-color: transparent;
+		border-bottom-color: #ccf0ff;
+		margin-bottom: 74px;
+		margin-left: 24.5px;
+	}
+
+	#tutorial-container[tutorial-id="6"]:before {
+		border-width: 21px;
+		border-right-color: transparent;
+		border-bottom-color: #69abf5;
+		margin-bottom: 74px;
 		margin-left: 20px;
 	}

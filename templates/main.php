@@ -28,9 +28,9 @@ style( 'ldaporg', 'fa-4.7.0/css/font-awesome.min' );
 			<ul>
 				{{#if groups}}
 					{{#each groups}}
-						<li class="group {{#if active}}active{{/if}}"  data-id="{{ id }}">
-							<a href="#" class="load">{{ cn }}</a>
-							{{#if superuser}}<a><span class="icon icon-delete" title="<?php p($l->t( 'Delete Group' )); ?>" data-id="{{ id }}"></span></a>{{/if}}
+						<li class="group {{#if active}}active{{/if}}"  data-id="{{ ldapcontacts_entry_id }}">
+							<a href="#" class="load">{{ ldapcontacts_name }}</a>
+							{{#if superuser}}<a><span class="icon icon-delete" title="<?php p($l->t( 'Delete Group' )); ?>" data-id="{{ ldapcontacts_entry_id }}"></span></a>{{/if}}
 						</li>
 					{{/each}}
 				{{else}}
@@ -44,47 +44,47 @@ style( 'ldaporg', 'fa-4.7.0/css/font-awesome.min' );
 	<div id="app-content">
 		<script id="content-tpl" type="text/x-handlebars-template">
 			{{#if group}}
-				<h2>{{ group.cn }}</h2>
+				<h2>{{ group.ldapcontacts_name }}</h2>
 				
 				<div class="content-nav">
-					{{#if group.canedit}}
+					{{#if group.ldaporg_canedit}}
 						<span class="search"><input type="search" id="group_add_member" placeholder="<?php p($l->t('Add Member')); ?>"><span class="abort"></span></span>
 						<div class="search-suggestions"></div>
 					{{/if}}
 					{{#if me}}{{#if notForcedMembership }}<a href="#" id="leave_group" class="leave"><?php p($l->t('End Group Membership')); ?></a>{{/if}}{{/if}}
 				</div>
 				
-				{{#if exportURL}}<div><a class="button" target="_blank" href="{{ exportURL }}"><?php p($l->t( 'Export group member details' )); ?> <span class="icon icon-external"></span></a></div>{{/if}}
+				{{#if exportURL}}<div id="export_member_details"><a class="button" target="_blank" href="{{ exportURL }}"><?php p($l->t( 'Export group member details' )); ?> <span class="icon icon-external"></span></a></div>{{/if}}
 				
-				<div class="msg-container"><span class="msg"></span></div>
+				<br><div class="msg-container"><span class="msg"></span></div><br>
 				
 				
 				<h3><?php p($l->t( 'Members' )); ?>{{#if memberCount}} ({{ memberCount }}){{/if}}</h3>
-					{{#if group.members}}
+					{{#if group.ldaporg_members}}
 						<table>
 							<tbody>
-								{{#if group.canedit}}
-									{{#each group.members}}
+								{{#if group.ldaporg_canedit}}
+									{{#each group.ldaporg_members}}
 										<tr class="members-menu">
-											<td>{{ name }} {{#if isadmin}}<i class="fa fa-user-circle" aria-hidden="true" title="<?php p($l->t( 'Group Admin')); ?>"></i>{{/if}} </td>
+											<td>{{ ldapcontacts_name }} {{#if ldaporg_admin}}<i class="fa fa-user-circle" aria-hidden="true" title="<?php p($l->t( 'Group Admin')); ?>"></i>{{/if}} </td>
 											<td>
 												<a href="#" class="icon icon-more"></a>
 												<div class="hidden options">
 													<ul>
-														{{#if isadmin}}<li><a href="#" class="remove-admin" data-id="{{ id }}" data-action="removeAdmin"><i class="fa fa-user-times" aria-hidden="true"></i><span><?php p($l->t( 'Remove Admin Privileges')); ?></span></a></li>
-														{{else}}<li><a href="#" class="add-admin" data-id="{{ id }}" data-action="addAdmin"><i class="fa fa-user-plus" aria-hidden="true"></i><span><?php p($l->t( 'Make Admin')); ?></span></a></li>
+														{{#if ldaporg_admin}}<li><a href="#" class="remove-admin" data-id="{{ ldapcontacts_entry_id }}" data-action="removeAdmin"><i class="fa fa-user-times" aria-hidden="true"></i><span><?php p($l->t( 'Remove Admin Privileges')); ?></span></a></li>
+														{{else}}<li><a href="#" class="add-admin" data-id="{{ ldapcontacts_entry_id }}" data-action="addAdmin"><i class="fa fa-user-plus" aria-hidden="true"></i><span><?php p($l->t( 'Make Admin')); ?></span></a></li>
 														{{/if}}
-														<li><a href="#" class="remove" data-id="{{ id }}" data-action="remove"><span class="icon icon-delete"></span><span><?php p($l->t( 'Remove')); ?></span></a></li>
+														<li><a href="#" class="remove" data-id="{{ ldapcontacts_entry_id }}" data-action="remove"><span class="icon icon-delete"></span><span><?php p($l->t( 'Remove')); ?></span></a></li>
 													</ul>
 												</div>
 											</td>
 										</tr>
 									{{/each}}
 								{{else}}
-									{{#each group.members}}
+									{{#each group.ldaporg_members}}
 										<tr>
-											<td>{{ name }} {{#if isadmin}}<i class="fa fa-user-circle" aria-hidden="true" title="<?php p($l->t( 'Group Admin')); ?>"></i>{{/if}} </td>
-											<td>{{#if isadmin}}<span class="admin"></span>{{/if}}</td>
+											<td>{{ ldapcontacts_name }} {{#if ldaporg_admin}}<i class="fa fa-user-circle" aria-hidden="true" title="<?php p($l->t( 'Group Admin')); ?>"></i>{{/if}} </td>
+											<td>{{#if ldaporg_admin}}<span class="admin"></span>{{/if}}</td>
 										</tr>
 									{{/each}}
 								{{/if}}
@@ -106,9 +106,9 @@ style( 'ldaporg', 'fa-4.7.0/css/font-awesome.min' );
 			</form>
 		</script>
 		
-		<script id="remove-group-tpl" type="text/x-handlebars-template">
+			<script id="remove-group-tpl" type="text/x-handlebars-template">
 			<div>
-				<h2><?php p($l->t( 'Do you really want to remove the group "{{ group.cn }}"?' )); ?></h2>
+				<h2><?php p($l->t( 'Do you really want to remove the group "{{ group.ldapcontacts_name }}"?' )); ?></h2>
 				<div><span class="msg"></span></div>
 				
 				<div>
@@ -142,4 +142,5 @@ style( 'ldaporg', 'fa-4.7.0/css/font-awesome.min' );
 	<p><?php p($l->t( 'Search for a user here to add him to this group' )); ?></p>
 	<p><?php p($l->t( 'Here you can leave this group' )); ?></p>
 	<p><?php p($l->t( 'All members of this group are listed here' )); ?></p>
+	<p><?php p($l->t( 'Use this to export all information for every member of this group' )); ?></p>
 </div>
