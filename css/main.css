@@ -10,6 +10,12 @@
 	height: 50px;
 }
 
+#app-navigation a {
+    display: block;
+    line-height: 44px;
+    padding: 0 12px;
+}
+
 #app-navigation > div.info {
 	height: 100%;
 	width: 100%;
