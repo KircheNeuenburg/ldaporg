@@ -22,7 +22,7 @@ style( 'ldaporg', 'settings' );
 			<table><tbody>
 				<tr>
 					<td><label for="ldaporg_superuser_groups"><?php p($l->t( 'Superuser Group' )); ?></label></td>
-					<td>
+					<td class="checkbox-wrapper-wrapper">
 						{{#each groups}}
 							<span class="checkbox-wrapper">
 								<input type="checkbox" id="ldaporg_superuser_group_{{@index}}" name="superuser_groups[]" value="{{ ldapcontacts_entry_id }}" {{#if ldaporg_superuser_group}}checked{{/if}}>
