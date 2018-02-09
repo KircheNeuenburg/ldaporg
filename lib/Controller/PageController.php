@@ -67,7 +67,6 @@ class PageController extends ContactController {
 	 * load all groups the current user has access to
 	 * 
 	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 */
 	public function loadGroups() {
 		// get the current users LDAP data

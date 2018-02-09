@@ -84,11 +84,11 @@ $(document).ready(function () {
 			});
 			return deferred.promise();
 		},
-		renderUsers: function( users ) {
+		renderUsers: function() {
 			var self = this;
 			var source = $( '#ldaporg-existing-users-tpl' ).html();
 			var template = Handlebars.compile( source );
-			var html = template( { users: users } );
+			var html = template( { users: self._users } );
 			$( '#ldaporg-existing-users' ).html( html );
 			
 			// button for selecting user
@@ -177,7 +177,7 @@ $(document).ready(function () {
 						if( data.status == 'success' ) {
 							self.loadUsers().done( function() {
 								// render the users again
-								self.renderUsers( self._users );
+								self.renderUsers();
 								// render the initial content area
 								self.renderContent();
 								// show a message that the user was deleted
@@ -229,7 +229,7 @@ $(document).ready(function () {
 					if( data.status == 'success' ) {
 						self.loadUsers().done( function() {
 							// render the users again
-							self.renderUsers( self._users );
+							self.renderUsers();
 							// render the initial content area
 							self.renderContent();
 						});
@@ -519,7 +519,7 @@ $(document).ready(function () {
 	
 	users.loadUsers().done( function(){
 		users.renderContent();
-		users.renderUsers( users._users );
+		users.renderUsers();
 	});
 	users.loadLdapContactsSettings().done( function() {
 		users.renderSettings().done( function() {
