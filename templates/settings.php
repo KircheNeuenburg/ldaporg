@@ -66,7 +66,7 @@ style( 'ldaporg', 'settings' );
 				</tr>
 				<tr>
 					<td><label for="ldaporg_welcome_mail_from_adress"><?php p($l->t( 'Welcome Mail FROM' ));?></label></td>
-					<td><input type="email" id="ldaporg_welcome_mail_from_adress" name="welcome_mail_from_adress" value="{{ settings.welcome_mail_from_adress }}" placeholder="<?php p($l->t( 'E-Mail Adress' )); ?>"></td>
+					<td><input type="email" id="ldaporg_welcome_mail_from_adress" name="welcome_mail_from_adress" value="{{ settings.welcome_mail_from_adress }}" placeholder="<?php p($l->t( 'E-Mail Address' )); ?>"></td>
 				</tr>
 				<tr>
 					<td><label for="ldaporg_welcome_mail_from_name"><?php p($l->t( 'Welcome Mail FROM Name' ));?></label></td>
@@ -165,8 +165,8 @@ style( 'ldaporg', 'settings' );
 					<td><input type="text" id="ldaporg-create-user-lastname" name="lastname" placeholder="<?php p($l->t( 'Lastname' )); ?>"></div></td>
 				</tr>
 				<tr>
-					<td><label for="ldaporg-create-user-mail"><?php p($l->t( 'eMail Adress' )); ?></label></td>
-					<td><input type="text" id="ldaporg-create-user-mail" name="mail" placeholder="<?php p($l->t( 'eMail Adress' )); ?>"></div></td>
+					<td><label for="ldaporg-create-user-mail"><?php p($l->t( 'E-Mail Address' )); ?></label></td>
+					<td><input type="text" id="ldaporg-create-user-mail" name="mail" placeholder="<?php p($l->t( 'E-Mail Address' )); ?>"></div></td>
 				</tr>
 			</tbody></table>
 			
