@@ -80,7 +80,7 @@ class PageController extends ContactController {
 		$superuser = false;
 		foreach( $superuser_groups as $superuser_group_entry_id ) {
 			foreach( $data['groups'] as $user_group ) {
-				if( $superuser_group_entry_id == $user_group['ldapcontacts_entry_id'] ) {
+				if( $superuser_group_entry_id === $user_group['ldapcontacts_entry_id'] ) {
 					$superuser = true;
 					break;
 				}
@@ -144,7 +144,7 @@ class PageController extends ContactController {
 		$stmt->execute();
 		
 		// check for sql errors
-		if( $stmt->errorCode() != '00000' ) return [];
+		if( $stmt->errorCode() !== '00000' ) return [];
 		
 		// get all admin ids
 		$tmp = [];
@@ -188,7 +188,7 @@ class PageController extends ContactController {
 		$stmt->execute();
 		
 		// check for sql errors
-		if( $stmt->errorCode() == '00000' ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'User is now an admin' ) ), 'status' => 'success' ) );
+		if( $stmt->errorCode() === '00000' ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'User is now an admin' ) ), 'status' => 'success' ) );
 		else return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Making user admin failed' ) ), 'status' => 'error' ) );
 	}
 	
@@ -201,7 +201,7 @@ class PageController extends ContactController {
 	 */
 	public function groupRemoveAdminUser( string $user_entry_id, string $group_entry_id ) {
 		// check if the user is allowed to edit this group
-		if( $user_entry_id != $this->getOwnEntryId() && !$this->userCanEdit( $group_entry_id ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Permission denied' ) ), 'status' => 'error' ) );
+		if( $user_entry_id !== $this->getOwnEntryId() && !$this->userCanEdit( $group_entry_id ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Permission denied' ) ), 'status' => 'error' ) );
 		
 		// run sql query
 		$sql = "DELETE FROM *PREFIX*ldaporg_group_admins WHERE group_id = ? AND admin_id = ?";
@@ -211,7 +211,7 @@ class PageController extends ContactController {
 		$stmt->execute();
 		
 		// check for sql errors
-		if( $stmt->errorCode() == '00000' ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'User is not an admin anymore' ) ), 'status' => 'success' ) );
+		if( $stmt->errorCode() === '00000' ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'User is not an admin anymore' ) ), 'status' => 'success' ) );
 		else return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Removing admin privileges failed' ) ), 'status' => 'error' ) );
 	}
 	
@@ -305,7 +305,7 @@ class PageController extends ContactController {
 		// check if the user is already a member of this group
 		foreach( $group[ $user_group_id_group_attribute ] as $member ) {
 			// if the user is already a member of this group, we don't have to add him again
-			if( $member == $user_group_id ) return true;
+			if( $member === $user_group_id ) return true;
 		}
 		
 		// add the given user as a member of this group
@@ -330,7 +330,7 @@ class PageController extends ContactController {
 		if( is_a( $return, 'OCP\AppFramework\Http\DataResponse' ) ) return $return;
 		
 		// check which type of message should be shown
-		if( $user_entry_id == $this->getOwnEntryId() ) {
+		if( $user_entry_id === $this->getOwnEntryId() ) {
 			// check if the request was a success or not
 			if( $return ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'You are not a member of the group anymore' ) ), 'status' => 'success' ) );
 			else return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Leaving the group failed' ) ), 'status' => 'error' ) );
@@ -350,19 +350,19 @@ class PageController extends ContactController {
 	 */
 	protected function removeUserFromGroupHelper( string $user_entry_id, string $group_entry_id ) {
 		// check if the user is allowed to edit this group or wants to remove himself
-		if( $user_entry_id != $this->getOwnEntryId() && !$this->userCanEdit( $group_entry_id ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Permission denied' ) ), 'status' => 'error' ) );
+		if( $user_entry_id !== $this->getOwnEntryId() && !$this->userCanEdit( $group_entry_id ) ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Permission denied' ) ), 'status' => 'error' ) );
 		
 		// the user can't be removed, if this is a forced group
 		if( $this->isForcedGroup( $group_entry_id ) ) {
 			// check which message to show
-			if( $user_entry_id != $this->getOwnEntryId() ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Removing users from this group is not possible' ) ), 'status' => 'error' ) );
+			if( $user_entry_id !== $this->getOwnEntryId() ) return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Removing users from this group is not possible' ) ), 'status' => 'error' ) );
 			else return new DataResponse( array( 'data' => array( 'message' => $this->l2->t( 'Leaving this group is not possible' ) ), 'status' => 'error' ) );
 		}
 		
 		// remove possible admin privileges from the user
 		$remove_admin_user = $this->groupRemoveAdminUser( $user_entry_id, $group_entry_id )->getData();
 		
-		if( $remove_admin_user['status'] != 'success' ) return false;
+		if( $remove_admin_user['status'] !== 'success' ) return false;
 		
 		// get parameters
 		$user_group_id_group_attribute = $this->settings->getSetting( 'user_group_id_group_attribute', false );
@@ -382,15 +382,15 @@ class PageController extends ContactController {
 		$group = $result[0];
 		
 		// if the group has no members, we are done here
-		if( !isset( $group[ $user_group_id_group_attribute ] ) || $group[ $user_group_id_group_attribute ]['count'] == 0 ) return true;
+		if( !isset( $group[ $user_group_id_group_attribute ] ) || $group[ $user_group_id_group_attribute ]['count'] === 0 ) return true;
 		
 		// remove the count variable
 		unset( $group[ $user_group_id_group_attribute ]['count'] );
 		
 		// go through the groups members and look for the user
 		foreach( $group[ $user_group_id_group_attribute ] as $id => $member ) {
-			// if this is the user, remove him7
-			if( $member == $user_group_id ) {
+			// if this is the user, remove him
+			if( $member === $user_group_id ) {
 				unset( $group[ $user_group_id_group_attribute ][ $id ] );
 				break;
 			}
@@ -634,7 +634,7 @@ class PageController extends ContactController {
 					$result = ldap_get_entries( $this->connection, $request );
 					
 					// no user with this name exists
-					if( $result['count'] == 0 ) break;
+					if( $result['count'] === 0 ) break;
 					// try another name
 					else $user[ $name_attribute ] = $name_orig . $i++;
 				}
@@ -653,7 +653,7 @@ class PageController extends ContactController {
 					$result = ldap_get_entries( $this->connection, $request );
 					
 					// no user with this uid exists
-					if( $result['count'] == 0 ) break;
+					if( $result['count'] === 0 ) break;
 					// try another uid
 					else $user['uid'] = $uid_orig . $i++;
 				}
@@ -802,7 +802,7 @@ class PageController extends ContactController {
 		$given_group = false;
 		// check if the given group is there
 		foreach( $groups as $group ) {
-			if( $group['ldapcontacts_entry_id'] == $group_entry_id ) {
+			if( $group['ldapcontacts_entry_id'] === $group_entry_id ) {
 				$given_group = $group;
 				break;
 			}
