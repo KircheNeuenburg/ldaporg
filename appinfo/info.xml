@@ -14,7 +14,7 @@ Manage your LDAP users and groups directly in Nextcloud
 ### Requirements
   * [LdapContacts](https://github.com/KircheNeuenburg/LdapContacts)
   * active LDAP authentification (check [Nextcloud admin manual](https://docs.nextcloud.com/server/13/admin_manual/configuration_user/user_auth_ldap.html) for details)]]></description>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
 	<licence>AGPL</licence>
     <author mail="alexander@h-software.de" homepage="https://h-software.de">Alexander Hornig</author>
     <namespace>LdapOrg</namespace>
