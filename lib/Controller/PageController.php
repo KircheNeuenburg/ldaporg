@@ -67,10 +67,14 @@ class PageController extends ContactController {
 	 * load all groups the current user has access to
 	 * 
 	 * @NoAdminRequired
+	 * @NoCSRFRequired
 	 */
 	public function loadGroups() {
 		// get the current users LDAP data
-		$data = $this->getUsers( $this->uid )[0];
+		$data = $this->getUsers( $this->uid );
+		// check if the user was found
+		if( $data ) $data = $data[0];
+		else return new DataResponse( [ 'data' => [], 'status' => 'success' ] );
 		
 		// check if the user is in one of the groups that can edit anything
 		$superuser_groups = $this->ldaporg_settings->getSetting( 'superuser_groups' );
@@ -112,6 +116,9 @@ class PageController extends ContactController {
 		/** mark all the admins in every group **/
 		// go through every group
 		foreach( $groups as &$group ) {
+			// check this is an LDAP group
+			if( !isset( $group['ldapcontacts_entry_id'] ) ) continue;
+			
 			// get the groups admin users
 			$admins = $this->getGroupAdmins( $group['ldapcontacts_entry_id'] );
 			
@@ -408,28 +415,31 @@ class PageController extends ContactController {
 		$superuser = false;
 		// check if the current user should be used
 		if( !$user_entry_id ) $user_entry_id = $this->getOwnEntryId();
-		// get all superuser groups
-		$superuser_groups = $this->ldaporg_settings->getSetting( 'superuser_groups' );
-		// get the users ldap data
-		$user = $this->getLdapEntryById( $user_entry_id );
-		// get the users attribute to associate him with a group
-		$user_group_id_attribute = $user[ $this->settings->getSetting( 'user_group_id_attribute', false ) ];
-		if( is_array( $user_group_id_attribute ) ) $user_group_id_attribute = $user_group_id_attribute[0];
-		// get all groups the user is a member of
-		$user_groups = $this->getGroups( $user_group_id_attribute, true );
-		
-		// reorder the users groups
-		$tmp = [];
-		foreach( $user_groups as $group ) {
-			$tmp[ $group['ldapcontacts_entry_id'] ] = $group;
-		}
-		$user_groups = $tmp;
-		
-		// check if the user is in a superuser group
-		foreach( $superuser_groups as $group ) {
-			if( isset( $user_groups[ $group ] ) ) {
-				$superuser = true;
-				break;
+		// check if the user is an LDAP user
+		if( $user_entry_id ) {
+			// get all superuser groups
+			$superuser_groups = $this->ldaporg_settings->getSetting( 'superuser_groups' );
+			// get the users ldap data
+			$user = $this->getLdapEntryById( $user_entry_id );
+			// get the users attribute to associate him with a group
+			$user_group_id_attribute = $user[ $this->settings->getSetting( 'user_group_id_attribute', false ) ];
+			if( is_array( $user_group_id_attribute ) ) $user_group_id_attribute = $user_group_id_attribute[0];
+			// get all groups the user is a member of
+			$user_groups = $this->getGroups( $user_group_id_attribute, true );
+
+			// reorder the users groups
+			$tmp = [];
+			foreach( $user_groups as $group ) {
+				$tmp[ $group['ldapcontacts_entry_id'] ] = $group;
+			}
+			$user_groups = $tmp;
+
+			// check if the user is in a superuser group
+			foreach( $superuser_groups as $group ) {
+				if( isset( $user_groups[ $group ] ) ) {
+					$superuser = true;
+					break;
+				}
 			}
 		}
 		
