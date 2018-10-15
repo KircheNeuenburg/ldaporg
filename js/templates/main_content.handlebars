@@ -1,0 +1,59 @@
+{{#if group}}
+	<h2>{{ group.ldapcontacts_name }}</h2>
+
+	<div class="content-nav">
+		{{#if group.ldaporg_canedit}}
+			<span class="search"><input type="search" id="group_add_member" placeholder="{{addMemberTXT}}"><span class="abort"></span></span>
+			<div class="search-suggestions"></div>
+		{{/if}}
+		{{#if me}}
+			{{#if notForcedMembership }}
+				<a href="#" id="leave_group" class="leave">{{endGroupMembershipTXT}}</a>
+			{{/if}}
+		{{/if}}
+	</div>
+
+	{{#if exportURL}}
+		<div id="export_member_details"><a class="button" target="_blank" href="{{ exportURL }}">{{exportGroupDetailsTXT}}<span class="icon icon-external"></span></a></div>
+	{{/if}}
+
+	<br><div class="msg-container"><span class="msg"></span></div><br>
+
+
+	<h3>{{membersTXT}}{{#if memberCount}} ({{ memberCount }}){{/if}}</h3>
+	{{#if group.ldaporg_members}}
+		<table>
+			<tbody>
+			{{#if group.ldaporg_canedit}}
+				{{#each group.ldaporg_members}}
+					<tr class="members-menu">
+						<td>{{ ldapcontacts_name }} {{#if ldaporg_admin}}<i class="fa fa-user-circle" aria-hidden="true" title="{{groupAdminTXT}}"></i>{{/if}} </td>
+						<td>
+							<a href="#" class="icon icon-more"></a>
+							<div class="hidden options">
+								<ul>
+									{{#if ldaporg_admin}}<li><a href="#" class="remove-admin" data-id="{{ ldapcontacts_entry_id }}" data-action="removeAdmin"><i class="fa fa-user-times" aria-hidden="true"></i><span>{{removeAdminPrivTXT}}</span></a></li>
+									{{else}}<li><a href="#" class="add-admin" data-id="{{ ldapcontacts_entry_id }}" data-action="addAdmin"><i class="fa fa-user-plus" aria-hidden="true"></i><span>{{makeAdminTXT}}</span></a></li>
+									{{/if}}
+									<li><a href="#" class="remove" data-id="{{ ldapcontacts_entry_id }}" data-action="remove"><span class="icon icon-delete"></span><span>{{removeTXT}}</span></a></li>
+								</ul>
+							</div>
+						</td>
+					</tr>
+				{{/each}}
+			{{else}}
+				{{#each group.ldaporg_members}}
+					<tr>
+						<td>{{ ldapcontacts_name }} {{#if ldaporg_admin}}<i class="fa fa-user-circle" aria-hidden="true" title="{{groupAdminTXT}}"></i>{{/if}} </td>
+						<td>{{#if ldaporg_admin}}<span class="admin"></span>{{/if}}</td>
+					</tr>
+				{{/each}}
+			{{/if}}
+			</tbody>
+		</table>
+	{{else}}
+		<h4>{{noMembersTXT}}</h4>
+	{{/if}}
+{{else}}
+	<h3>{{selectGroupTXT}}</h3><span class="msg"></span>
+{{/if}}
