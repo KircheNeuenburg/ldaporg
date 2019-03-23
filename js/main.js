@@ -163,9 +163,9 @@ Groups.prototype = {
 			self._superuser = true;
 			
 			// show special superuser options
-			var source = $( '#navigation-header-tpl' ).html();
-			var template = Handlebars.compile( source );
-			var html = template();
+			var html = OCA.LdapOrgTempaltes.main_navigation_header({
+				addGroupTXT: t('ldaporg', 'Add Group')
+			});
 			$( '#navigation-header' ).html( html );
 			
 			// add action for creating a group
@@ -173,9 +173,10 @@ Groups.prototype = {
 				// no group is active at the moment
 				self._activeGroup = undefined;
 				// load the adding form into the content area
-				var source = $( '#add-group-tpl' ).html();
-				var template = Handlebars.compile( source );
-				var html = template();
+				var html = OCA.LdapOrgTempaltes.main_add_group({
+					nameTXT: t('ldaporg', 'Group Name'),
+					addTXT: t('ldaporg', 'Add Group')
+				});
 				$( '#info' ).html( html );
 				
 				$( '#add-group-create' ).click( function( e ) {
@@ -218,10 +219,12 @@ Groups.prototype = {
 	// render group overview
 	renderNavigation: function() {
 		var self = this;
-        var source = $( '#navigation-tpl' ).html();
-        var template = Handlebars.compile( source );
-		
-        var html = template( { groups: this._groups } );
+
+		var html = OCA.LdapOrgTempaltes.main_navigation({
+			groups: this._groups,
+			deleteTXT: t('ldaporg', 'Delete Group'),
+			noMemberTXT: t('ldaporg', 'You are not a member of any group')
+        });
         $( '#group-navigation' ).html( html );
 		
 		// load a group
@@ -235,15 +238,19 @@ Groups.prototype = {
 			$( '#group-navigation .group > a > span.icon-delete' ).click( function( e ) {
 				var group_entry_id = $( this ).attr( 'data-id' );
 				// ask the user if he really wants to delete this group
-				var source = $( '#remove-group-tpl' ).html();
-				var template = Handlebars.compile( source )
-				
+
 				// get the group
 				var group = self._groups[ group_entry_id ];
 				// check if the group was found
 				if( typeof( group ) == 'undefined' || group == null ) return;
 				
-				var html = template( { group: group } );
+				var html = OCA.LdapOrgTempaltes.main_remove_group({
+					yesTXT: t('ldaporg', 'Yes'),
+					noTXT: t('ldaporg', 'No'),
+					questionTXT: t('ldaporg', 'Do you really want to remove the group {groupName]', {
+						groupName: group.ldapcontacts_name
+					})
+				});
 				$( '#info' ).html( html );
 				
 				// really remove button
@@ -304,8 +311,6 @@ Groups.prototype = {
 		return $.get( this._baseUrl + '/canedit/' + encodeURI( group_entry_id ) ).done( function( data ) {
 			var canedit = data.status == 'success' && data.data ? true : false;
 			
-			var source = $( '#content-tpl' ).html();
-			var template = Handlebars.compile( source );
 			var html_option = { group: self._activeGroup, notForcedMembership: true };
 			
 			// check if a group has been selected
@@ -340,7 +345,18 @@ Groups.prototype = {
 			}
 			
 			// render content
-			$( '#info' ).html( template( html_option ) );
+			$( '#info' ).html( OCA.LdapOrgTempaltes.main_content( _.extend({
+				addMemberTXT: t('ldaporg', 'Add Member'),
+				endGroupMembershipTXT: t('ldaporg', 'End Group Membership'),
+				exportGroupDetailsTXT: t('ldaporg', 'Export group member details'),
+				membersTXT: t('ldaporg', 'Members'),
+				groupAdminTXT: t('ldaporg', 'Group Admin'),
+				removeAdminPrivTXT: t('ldaporg', 'Remove Admin Privileges'),
+				makeAdminTXT: t('ldaporg', 'Make Admin'),
+				removeTXT: t('ldaporg', 'Remove'),
+				noMembersTXT: t('ldaporg', 'There are no members in this group yet'),
+				selectGroupTXT: t('ldaporg', 'Select a group from the list to view details')
+			}, html_option) ) );
 			$( '#info' ).focus();
 			
 			// button for leaving the group
@@ -693,9 +709,10 @@ Tutorial.prototype = {
 		if( typeof( action_result ) != 'undefined' && typeof( action_result.readyState ) != 'undefined' ) {
 			action_result.done( function() {
 				// render new tutorial
-				var source = $( '#tutorial-tpl' ).html();
-				var template = Handlebars.compile( source );
-				var html = template( { message: self.getMessage() } );
+				var html = OCA.LdapOrgTempaltes.main_tutorial({
+					message: self.getMessage(),
+					gotItTXT: t('ldaporg', 'Got it')
+				});
 				self.getTutorialParent().append( html );
 				// add custom attribute
 				$( '#tutorial-container' ).attr( "tutorial-id", self._state ).slideDown( 300 );
@@ -719,9 +736,10 @@ Tutorial.prototype = {
 		else {
 			
 			// render new tutorial
-			var source = $( '#tutorial-tpl' ).html();
-			var template = Handlebars.compile( source );
-			var html = template( { message: this.getMessage() } );
+			var html = OCA.LdapOrgTempaltes.main_tutorial({
+				message: self.getMessage(),
+				gotItTXT: t('ldaporg', 'Got it')
+			});
 			this.getTutorialParent().append( html );
 			// add custom attribute
 			$( '#tutorial-container' ).attr( "tutorial-id", this._state ).slideDown( 300 );

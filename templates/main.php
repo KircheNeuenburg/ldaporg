@@ -12,6 +12,7 @@
 /** @var \OCP\IL10N $l */
 
 script( 'ldaporg', 'main' );
+script('ldaporg', 'templates');
 style( 'ldaporg', 'main' );
 style( 'ldaporg', 'tutorial' );
 // load font awesome icons
@@ -19,98 +20,16 @@ style( 'ldaporg', 'fa-4.7.0/css/font-awesome.min' );
 ?>
 <div id="app">
 	<div id="app-navigation">
-		<script id="navigation-header-tpl" type="text/x-handlebars-template">
-			<a href="#" id="add-group"><i class="fa fa-plus-square"></i><span><?php p($l->t( 'Add Group')); ?></span></a>
-		</script>
 		<div id="navigation-header"><div class="icon-loading centered"></div></div>
-		
-		<script id="navigation-tpl" type="text/x-handlebars-template">
-			<ul>
-				{{#if groups}}
-					{{#each groups}}
-						<li class="group {{#if active}}active{{/if}}"  data-id="{{ ldapcontacts_entry_id }}">
-							<a href="#" class="load">{{ ldapcontacts_name }}</a>
-							{{#if superuser}}<a><span class="icon icon-delete" title="<?php p($l->t( 'Delete Group' )); ?>" data-id="{{ ldapcontacts_entry_id }}"></span></a>{{/if}}
-						</li>
-					{{/each}}
-				{{else}}
-					<li><a><?php p($l->t( "You are not a member of any group" )); ?></li>
-				{{/if}}
-			</ul>
-		</script>
 		<div id="group-navigation"><div class="icon-loading centered"></div></div>
 	</div>
 
 	<div id="app-content">
-		<script id="content-tpl" type="text/x-handlebars-template">
-			{{#if group}}
-				<h2>{{ group.ldapcontacts_name }}</h2>
-				
-				<div class="content-nav">
-					{{#if group.ldaporg_canedit}}
-						<span class="search"><input type="search" id="group_add_member" placeholder="<?php p($l->t('Add Member')); ?>"><span class="abort"></span></span>
-						<div class="search-suggestions"></div>
-					{{/if}}
-					{{#if me}}{{#if notForcedMembership }}<a href="#" id="leave_group" class="leave"><?php p($l->t('End Group Membership')); ?></a>{{/if}}{{/if}}
-				</div>
-				
-				{{#if exportURL}}<div id="export_member_details"><a class="button" target="_blank" href="{{ exportURL }}"><?php p($l->t( 'Export group member details' )); ?> <span class="icon icon-external"></span></a></div>{{/if}}
-				
-				<br><div class="msg-container"><span class="msg"></span></div><br>
-				
-				
-				<h3><?php p($l->t( 'Members' )); ?>{{#if memberCount}} ({{ memberCount }}){{/if}}</h3>
-					{{#if group.ldaporg_members}}
-						<table>
-							<tbody>
-								{{#if group.ldaporg_canedit}}
-									{{#each group.ldaporg_members}}
-										<tr class="members-menu">
-											<td>{{ ldapcontacts_name }} {{#if ldaporg_admin}}<i class="fa fa-user-circle" aria-hidden="true" title="<?php p($l->t( 'Group Admin')); ?>"></i>{{/if}} </td>
-											<td>
-												<a href="#" class="icon icon-more"></a>
-												<div class="hidden options">
-													<ul>
-														{{#if ldaporg_admin}}<li><a href="#" class="remove-admin" data-id="{{ ldapcontacts_entry_id }}" data-action="removeAdmin"><i class="fa fa-user-times" aria-hidden="true"></i><span><?php p($l->t( 'Remove Admin Privileges')); ?></span></a></li>
-														{{else}}<li><a href="#" class="add-admin" data-id="{{ ldapcontacts_entry_id }}" data-action="addAdmin"><i class="fa fa-user-plus" aria-hidden="true"></i><span><?php p($l->t( 'Make Admin')); ?></span></a></li>
-														{{/if}}
-														<li><a href="#" class="remove" data-id="{{ ldapcontacts_entry_id }}" data-action="remove"><span class="icon icon-delete"></span><span><?php p($l->t( 'Remove')); ?></span></a></li>
-													</ul>
-												</div>
-											</td>
-										</tr>
-									{{/each}}
-								{{else}}
-									{{#each group.ldaporg_members}}
-										<tr>
-											<td>{{ ldapcontacts_name }} {{#if ldaporg_admin}}<i class="fa fa-user-circle" aria-hidden="true" title="<?php p($l->t( 'Group Admin')); ?>"></i>{{/if}} </td>
-											<td>{{#if ldaporg_admin}}<span class="admin"></span>{{/if}}</td>
-										</tr>
-									{{/each}}
-								{{/if}}
-							</tbody>
-						</table>
-					{{else}}
-						<h4><?php p($l->t('There are no members in this group yet')); ?></h4>
-					{{/if}}
-			{{else}}
-				<h3><?php p($l->t('Select a group from the list to view details')); ?></h3><span class="msg"></span>
-			{{/if}}
-		</script>
-		
-		<script id="add-group-tpl" type="text/x-handlebars-template">
-			<form id="add-group-form">
-				<label for="add-group-name"><?php p($l->t( 'Group Name' )); ?></label> <input type="text" name="group_name" id="add-group-name" placeholder="<?php p($l->t( 'Group Name')); ?>">
-				<button id="add-group-create" type="submit"><?php p($l->t( 'Add Group' )); ?></button>
-				<div><span class="msg"></span></div>
-			</form>
-		</script>
-		
 			<script id="remove-group-tpl" type="text/x-handlebars-template">
 			<div>
 				<h2><?php p($l->t( 'Do you really want to remove the group "{{ group.ldapcontacts_name }}"?' )); ?></h2>
 				<div><span class="msg"></span></div>
-				
+
 				<div>
 					<button id="remove-group"><?php p($l->t( 'Yes' )); ?></button>
 					<button id="abort-remove-group"><?php p($l->t( 'No' )); ?></button>
@@ -123,17 +42,6 @@ style( 'ldaporg', 'fa-4.7.0/css/font-awesome.min' );
 
 <script id="loading-tpl" type="text/x-handlebars-template"><div class="icon-loading centered"></div></script>
 
-
-<script id="tutorial-tpl" type="text/x-handlebars-template">
-	<div id="tutorial-container" style="display: none">
-		<div class="body">
-			{{ message }}
-		</div>
-		<div class="footer">
-			<button id="tutorial-next"><?php p($l->t( 'Got it' )); ?></button>
-		</div>
-	</div>
-</script>
 
 <div id="tutorial-translations" style="display: none">
 	<p><?php p($l->t( 'For creating a group click here' )); ?></p>

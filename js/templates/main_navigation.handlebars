@@ -1,0 +1,12 @@
+<ul>
+	{{#if groups}}
+		{{#each groups}}
+			<li class="group {{#if active}}active{{/if}}"  data-id="{{ ldapcontacts_entry_id }}">
+				<a href="#" class="load">{{ ldapcontacts_name }}</a>
+				{{#if superuser}}<a><span class="icon icon-delete" title="{{deleteTXT}}" data-id="{{ ldapcontacts_entry_id }}"></span></a>{{/if}}
+			</li>
+		{{/each}}
+	{{else}}
+		<li><a>{{noMemberTXT}}</li>
+	{{/if}}
+</ul>
